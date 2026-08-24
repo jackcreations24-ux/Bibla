@@ -1,0 +1,6 @@
+{
+  "name": "Bib la",
+  "description": "Yon aplikasyon Bib modèn ak style neumorphism, vèsè chak jou, nòt pèsonèl, ak rapèl pou lekti.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
