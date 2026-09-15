@@ -35,16 +35,17 @@ fun NotificationDetailScreen(
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val notifications by viewModel.notifications.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     val notification = notifications.find { it.id == notificationId }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detay Notifikasyon", fontWeight = FontWeight.Bold) },
+                title = { Text(if (appLanguage == "fr") "Détail de la Notification" else "Detay Notifikasyon", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Retounen")
+                        Icon(Icons.Default.ArrowBack, contentDescription = if (appLanguage == "fr") "Retour" else "Retounen")
                     }
                 },
                 actions = {
@@ -55,7 +56,7 @@ fun NotificationDetailScreen(
                         }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Siprime",
+                                contentDescription = if (appLanguage == "fr") "Supprimer" else "Siprime",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -76,13 +77,13 @@ fun NotificationDetailScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Notifikasyon sa a pa egziste ankò.",
+                        text = if (appLanguage == "fr") "Cette notification n'existe plus." else "Notifikasyon sa a pa egziste ankò.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { navController.popBackStack() }) {
-                        Text("Retounen")
+                        Text(if (appLanguage == "fr") "Retour" else "Retounen")
                     }
                 }
             }
@@ -132,7 +133,7 @@ fun NotificationDetailScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy - HH:mm", Locale.getDefault())
+                                val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy - HH:mm", if (appLanguage == "fr") Locale.FRENCH else Locale.getDefault())
                                 Text(
                                     text = dateFormat.format(Date(notification.timestamp)),
                                     style = MaterialTheme.typography.labelMedium,
@@ -141,7 +142,7 @@ fun NotificationDetailScreen(
                             }
                         }
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.padding(vertical = 20.dp),
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
@@ -182,7 +183,7 @@ fun NotificationDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Ouvri Bib la pou w li",
+                                    text = if (appLanguage == "fr") "Ouvrir la Bible pour lire" else "Ouvri Bib la pou w li",
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary

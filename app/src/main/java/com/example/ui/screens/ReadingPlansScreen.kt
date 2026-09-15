@@ -55,11 +55,12 @@ fun ReadingPlansScreen(
     val reminderHour by viewModel.readingPlanReminderHour.collectAsState()
     val reminderMinute by viewModel.readingPlanReminderMinute.collectAsState()
     val reminderEnabled by viewModel.readingPlanReminderEnabled.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     var selectedPlanId by remember(activePlanId) { mutableStateOf(activePlanId) }
     var showReminderDialog by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf("Tout") } // "Tout", "Ki Rete", "Ki Fini"
+    var selectedFilterIndex by remember { mutableIntStateOf(0) } // 0: All, 1: Remaining, 2: Done
     var searchQuery by remember { mutableStateOf("") }
 
     val currentPlan = remember(selectedPlanId) {
@@ -74,11 +75,11 @@ fun ReadingPlansScreen(
     val nextUnreadDay = (1..currentPlan.totalDays).firstOrNull { !completedDays.contains(it) } ?: 1
     val todayDayPlan = currentPlan.days.getOrNull(nextUnreadDay - 1)
 
-    val filteredDays = remember(currentPlan, completedDays, selectedFilter, searchQuery) {
+    val filteredDays = remember(currentPlan, completedDays, selectedFilterIndex, searchQuery) {
         currentPlan.days.filter { day ->
-            val matchesFilter = when (selectedFilter) {
-                "Ki Fini" -> completedDays.contains(day.dayNumber)
-                "Ki Rete" -> !completedDays.contains(day.dayNumber)
+            val matchesFilter = when (selectedFilterIndex) {
+                2 -> completedDays.contains(day.dayNumber)
+                1 -> !completedDays.contains(day.dayNumber)
                 else -> true
             }
             val matchesSearch = if (searchQuery.isBlank()) true else {
@@ -95,12 +96,12 @@ fun ReadingPlansScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Plan Lekti Bib la",
+                            text = if (appLanguage == "fr") "Plans de Lecture de la Bible" else "Plan Lekti Bib la",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Swiv pwogrè w chak jou",
+                            text = if (appLanguage == "fr") "Suivez votre progression quotidienne" else "Swiv pwogrè w chak jou",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -110,7 +111,7 @@ fun ReadingPlansScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Tounen"
+                            contentDescription = if (appLanguage == "fr") "Retour" else "Tounen"
                         )
                     }
                 },
@@ -128,7 +129,7 @@ fun ReadingPlansScreen(
                             Text(text = "🔥", fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "$readingStreak ${if (readingStreak > 1) "jou" else "jou"}",
+                                text = "$readingStreak ${if (appLanguage == "fr") (if (readingStreak > 1) "jours" else "jour") else "jou"}",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFD97706)
@@ -140,7 +141,7 @@ fun ReadingPlansScreen(
                     IconButton(onClick = { showReminderDialog = true }) {
                         Icon(
                             imageVector = if (reminderEnabled) Icons.Default.NotificationsActive else Icons.Default.NotificationsNone,
-                            contentDescription = "Rapèl Otomatik",
+                            contentDescription = if (appLanguage == "fr") "Rappels Quotidiens" else "Rapèl Otomatik",
                             tint = if (reminderEnabled) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -162,7 +163,7 @@ fun ReadingPlansScreen(
             // 1. Reading Plan Selector Horizontal Row
             item {
                 Text(
-                    text = "CHWAZI YON PLAN LEKTI",
+                    text = if (appLanguage == "fr") "CHOISIR UN PLAN DE LECTURE" else "CHWAZI YON PLAN LEKTI",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.5.sp,
@@ -229,7 +230,7 @@ fun ReadingPlansScreen(
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
                                             Text(
-                                                text = "AKTIF",
+                                                text = if (appLanguage == "fr") "ACTIF" else "AKTIF",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Black,
                                                 color = Color.White,
@@ -251,7 +252,7 @@ fun ReadingPlansScreen(
                                 )
 
                                 Text(
-                                    text = "${plan.totalDays} Jou • ${plan.category}",
+                                    text = if (appLanguage == "fr") "${plan.totalDays} Jours • ${plan.category}" else "${plan.totalDays} Jou • ${plan.category}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -317,7 +318,8 @@ fun ReadingPlansScreen(
                                 NeumorphicButton(
                                     onClick = {
                                         viewModel.setActiveReadingPlan(selectedPlanId)
-                                        Toast.makeText(context, "${currentPlan.title} defini kòm plan prensipal ou!", Toast.LENGTH_SHORT).show()
+                                        val toastMsg = if (appLanguage == "fr") "${currentPlan.title} défini comme votre plan actif !" else "${currentPlan.title} defini kòm plan prensipal ou!"
+                                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                     },
                                     cornerRadius = 12.dp,
                                     elevation = 4.dp,
@@ -325,7 +327,7 @@ fun ReadingPlansScreen(
                                     isDarkTheme = isDarkTheme
                                 ) {
                                     Text(
-                                        text = "Fè l Aktif",
+                                        text = if (appLanguage == "fr") "Définir Actif" else "Fè l Aktif",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -351,7 +353,7 @@ fun ReadingPlansScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Pwogrè: ${completedDays.size} / ${currentPlan.totalDays} Jou",
+                                text = if (appLanguage == "fr") "Progression: ${completedDays.size} / ${currentPlan.totalDays} Jours" else "Pwogrè: ${completedDays.size} / ${currentPlan.totalDays} Jou",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -409,7 +411,7 @@ fun ReadingPlansScreen(
                                                 }
                                             }
                                             Text(
-                                                text = "PWÒCHEN LEKTI OU (JOU ${day.dayNumber})",
+                                                text = if (appLanguage == "fr") "PROCHAINE LECTURE (JOUR ${day.dayNumber})" else "PWÒCHEN LEKTI OU (JOU ${day.dayNumber})",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color(currentPlan.colorPrimaryHex)
@@ -465,7 +467,11 @@ fun ReadingPlansScreen(
                                         TextButton(
                                             onClick = {
                                                 viewModel.toggleReadingPlanDayCompleted(currentPlan.id, day.dayNumber)
-                                                val msg = if (!isCompleted) "Jou ${day.dayNumber} make kòm fini!" else "Jou ${day.dayNumber} remèt kòm ki pa fini"
+                                                val msg = if (appLanguage == "fr") {
+                                                    if (!isCompleted) "Jour ${day.dayNumber} marqué comme lu !" else "Jour ${day.dayNumber} marqué comme non lu"
+                                                } else {
+                                                    if (!isCompleted) "Jou ${day.dayNumber} make kòm fini!" else "Jou ${day.dayNumber} remèt kòm ki pa fini"
+                                                }
                                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                             }
                                         ) {
@@ -477,7 +483,11 @@ fun ReadingPlansScreen(
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = if (isCompleted) "Fini" else "Make kòm fini",
+                                                text = if (isCompleted) {
+                                                    if (appLanguage == "fr") "Terminé" else "Fini"
+                                                } else {
+                                                    if (appLanguage == "fr") "Marquer comme lu" else "Make kòm fini"
+                                                },
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -498,7 +508,7 @@ fun ReadingPlansScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "LIS TOUT JOU YO (${filteredDays.size})",
+                        text = if (appLanguage == "fr") "LISTE DES JOURS (${filteredDays.size})" else "LIS TOUT JOU YO (${filteredDays.size})",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
@@ -506,16 +516,17 @@ fun ReadingPlansScreen(
                     )
 
                     // Filter chips
+                    val filterLabels = if (appLanguage == "fr") listOf("Tous", "Restants", "Terminés") else listOf("Tout", "Ki Rete", "Ki Fini")
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("Tout", "Ki Rete", "Ki Fini").forEach { filter ->
-                            val isFilterSelected = selectedFilter == filter
+                        filterLabels.forEachIndexed { index, filterText ->
+                            val isFilterSelected = selectedFilterIndex == index
                             Surface(
                                 color = if (isFilterSelected) PrimaryColor else MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.clickable { selectedFilter = filter }
+                                modifier = Modifier.clickable { selectedFilterIndex = index }
                             ) {
                                 Text(
-                                    text = filter,
+                                    text = filterText,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isFilterSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isFilterSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -535,13 +546,18 @@ fun ReadingPlansScreen(
                     day = day,
                     isCompleted = isCompleted,
                     isDarkTheme = isDarkTheme,
+                    appLanguage = appLanguage,
                     planPrimaryColor = Color(currentPlan.colorPrimaryHex),
                     onPassageClick = { passage ->
                         navController.navigate("reader/${passage.book}/${passage.startChapter}")
                     },
                     onToggleComplete = {
                         viewModel.toggleReadingPlanDayCompleted(currentPlan.id, day.dayNumber)
-                        val msg = if (!isCompleted) "Jou ${day.dayNumber} konplete!" else "Jou ${day.dayNumber} demake"
+                        val msg = if (appLanguage == "fr") {
+                            if (!isCompleted) "Jour ${day.dayNumber} complété !" else "Jour ${day.dayNumber} décoché"
+                        } else {
+                            if (!isCompleted) "Jou ${day.dayNumber} konplete!" else "Jou ${day.dayNumber} demake"
+                        }
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
                 )
@@ -559,7 +575,7 @@ fun ReadingPlansScreen(
                             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Rekòmanse plan sa a",
+                                text = if (appLanguage == "fr") "Recommencer ce plan" else "Rekòmanse plan sa a",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -582,7 +598,11 @@ fun ReadingPlansScreen(
                 val h = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
                 val amPm = if (hour >= 12) "PM" else "AM"
                 val timeFormatted = String.format("%02d:%02d %s", h, minute, amPm)
-                val msg = if (enabled) "Rapèl lekti aktif pou chak jou a $timeFormatted!" else "Rapèl lekti dezaktive."
+                val msg = if (appLanguage == "fr") {
+                    if (enabled) "Rappel de lecture activé pour chaque jour à $timeFormatted !" else "Rappels désactivés."
+                } else {
+                    if (enabled) "Rapèl lekti aktif pou chak jou a $timeFormatted!" else "Rapèl lekti dezaktive."
+                }
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showReminderDialog = false }
@@ -593,23 +613,23 @@ fun ReadingPlansScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Rekòmanse Plan an?") },
-            text = { Text("Èske w sèten ou vle efase pwogrè pou plan '${currentPlan.title}' la epi rekòmanse a zewo?") },
+            title = { Text(if (appLanguage == "fr") "Réinitialiser le Plan ?" else "Rekòmanse Plan an?") },
+            text = { Text(if (appLanguage == "fr") "Êtes-vous sûr de vouloir réinitialiser vos progrès pour le plan '${currentPlan.title}' et recommencer à zéro ?" else "Èske w sèten ou vle efase pwogrè pou plan '${currentPlan.title}' la epi rekòmanse a zewo?") },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.resetReadingPlanProgress(currentPlan.id)
                         showResetDialog = false
-                        Toast.makeText(context, "Plan an rekòmanse a zewo!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, if (appLanguage == "fr") "Le plan a été réinitialisé à zéro !" else "Plan an rekòmanse a zewo!", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFEF4444))
                 ) {
-                    Text("Wi, Rekòmanse", fontWeight = FontWeight.Bold)
+                    Text(if (appLanguage == "fr") "Oui, Réinitialiser" else "Wi, Rekòmanse", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("Anile")
+                    Text(if (appLanguage == "fr") "Annuler" else "Anile")
                 }
             }
         )
@@ -621,6 +641,7 @@ private fun DayReadingItemCard(
     day: ReadingPlanDay,
     isCompleted: Boolean,
     isDarkTheme: Boolean,
+    appLanguage: String = "ht",
     planPrimaryColor: Color,
     onPassageClick: (com.example.data.ReadingPassage) -> Unit,
     onToggleComplete: () -> Unit
@@ -648,7 +669,7 @@ private fun DayReadingItemCard(
             ) {
                 Icon(
                     imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = if (isCompleted) "Fini" else "Ki pa fini",
+                    contentDescription = if (appLanguage == "fr") (if (isCompleted) "Lu" else "Non lu") else (if (isCompleted) "Fini" else "Ki pa fini"),
                     tint = if (isCompleted) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.size(24.dp)
                 )
@@ -659,7 +680,7 @@ private fun DayReadingItemCard(
             // Day Info & Passages
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Jou ${day.dayNumber}",
+                    text = if (appLanguage == "fr") "Jour ${day.dayNumber}" else "Jou ${day.dayNumber}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = if (isCompleted) Color(0xFF10B981) else planPrimaryColor
@@ -697,7 +718,7 @@ private fun DayReadingItemCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Li",
+                    contentDescription = if (appLanguage == "fr") "Lire" else "Li",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

@@ -27,14 +27,15 @@ fun BookmarksScreen(navController: NavController, viewModel: BibleViewModel) {
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val bookmarks by viewModel.bookmarks.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Favori mwen yo") },
+                title = { Text(if (appLanguage == "fr") "Mes Favoris" else "Favori mwen yo") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = if (appLanguage == "fr") "Retour" else "Retou")
                     }
                 }
             )
@@ -56,7 +57,7 @@ fun BookmarksScreen(navController: NavController, viewModel: BibleViewModel) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Ou poko gen okenn favori.",
+                        if (appLanguage == "fr") "Vous n'avez aucun favori pour le moment." else "Ou poko gen okenn favori.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -124,8 +125,9 @@ fun BookmarksScreen(navController: NavController, viewModel: BibleViewModel) {
                             }
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
+                            val bookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
                             Text(
-                                text = "${verse.book} ${verse.chapter}:${verse.verseNumber}",
+                                text = "$bookName ${verse.chapter}:${verse.verseNumber}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -144,7 +146,7 @@ fun BookmarksScreen(navController: NavController, viewModel: BibleViewModel) {
                                 },
                                 modifier = Modifier.align(Alignment.End)
                             ) {
-                                Text("Li vèsè a")
+                                Text(if (appLanguage == "fr") "Lire le verset" else "Li vèsè a")
                             }
                         }
                     }

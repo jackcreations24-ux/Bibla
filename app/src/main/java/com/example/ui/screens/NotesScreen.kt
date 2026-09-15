@@ -33,6 +33,7 @@ fun NoteItem(
     viewModel: BibleViewModel,
     isDarkTheme: Boolean,
     navController: NavController,
+    appLanguage: String,
     onLongClick: () -> Unit
 ) {
     var associatedVerse by remember { mutableStateOf<com.example.data.Verse?>(null) }
@@ -60,15 +61,17 @@ fun NoteItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val locale = if (appLanguage == "fr") Locale.FRENCH else Locale.getDefault()
                 Text(
-                    text = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault()).format(Date(note.timestamp)),
+                    text = SimpleDateFormat("d MMM yyyy, HH:mm", locale).format(Date(note.timestamp)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 
                 associatedVerse?.let { verse ->
+                    val bookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
                     Text(
-                        text = "${verse.book} ${verse.chapter}:${verse.verseNumber}",
+                        text = "$bookName ${verse.chapter}:${verse.verseNumber}",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary
@@ -131,6 +134,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val notes by viewModel.allNotes.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
     val haptic = LocalHapticFeedback.current
 
     val draftTitle by viewModel.noteDraftTitle.collectAsState()
@@ -157,7 +161,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
                 .fillMaxWidth()
         ) {
             Text(
-                text = "Nòt mwen yo",
+                text = if (appLanguage == "fr") "Mes Notes" else "Nòt mwen yo",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
@@ -166,7 +170,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
             if (notes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        "Ou poko gen okenn nòt.",
+                        if (appLanguage == "fr") "Vous n'avez pas encore de note." else "Ou poko gen okenn nòt.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -178,7 +182,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(notes) { note ->
-                        NoteItem(note, viewModel, isDarkTheme, navController) {
+                        NoteItem(note, viewModel, isDarkTheme, navController, appLanguage) {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             noteToDelete = note
                         }
@@ -211,7 +215,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
                             newNoteTitle = it
                             viewModel.updateNoteDraft(it, newNoteText)
                         },
-                        placeholder = { Text("Tit nòt la (opsyonèl)...") },
+                        placeholder = { Text(if (appLanguage == "fr") "Titre de la note (optionnel)..." else "Tit nòt la (opsyonèl)...") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = Color.Transparent,
@@ -232,7 +236,7 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
                             newNoteText = it
                             viewModel.updateNoteDraft(newNoteTitle, it)
                         },
-                        placeholder = { Text("Tape kontni nòt ou la...") },
+                        placeholder = { Text(if (appLanguage == "fr") "Écrivez votre note ici..." else "Tape kontni nòt ou la...") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = Color.Transparent,
@@ -275,8 +279,8 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
         if (noteToDelete != null) {
             AlertDialog(
                 onDismissRequest = { noteToDelete = null },
-                title = { Text("Efase nòt?") },
-                text = { Text("Èske ou sèten ou vle efase nòt sa a?") },
+                title = { Text(if (appLanguage == "fr") "Supprimer la note ?" else "Efase nòt?") },
+                text = { Text(if (appLanguage == "fr") "Êtes-vous sûr de vouloir supprimer cette note ?" else "Èske ou sèten ou vle efase nòt sa a?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -285,12 +289,12 @@ fun NotesScreen(navController: NavController, viewModel: BibleViewModel) {
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Efase")
+                        Text(if (appLanguage == "fr") "Supprimer" else "Efase")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { noteToDelete = null }) {
-                        Text("Anile")
+                        Text(if (appLanguage == "fr") "Annuler" else "Anile")
                     }
                 }
             )

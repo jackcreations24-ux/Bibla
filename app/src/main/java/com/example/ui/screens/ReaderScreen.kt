@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -73,8 +74,12 @@ fun ReaderScreen(
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val textSizeMultiplier by viewModel.textSizeMultiplier.collectAsState()
     val fontFamilyType by viewModel.fontFamilyType.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
+    val bibleVersion by viewModel.bibleVersion.collectAsState()
+    val frenchVerses by viewModel.frenchVersesForCurrentChapter.collectAsState()
 
     var showFontSizeSheet by remember { mutableStateOf(false) }
+    var showVersionMenu by remember { mutableStateOf(false) }
 
     var selectedBook by remember { mutableStateOf(initialBook ?: progress?.book ?: "Jenèz") }
     var selectedChapter by remember { mutableStateOf(initialChapter ?: progress?.chapter ?: 1) }
@@ -100,11 +105,16 @@ fun ReaderScreen(
             enter = slideInVertically { -it } + expandVertically(),
             exit = slideOutVertically { -it } + shrinkVertically()
         ) {
+            val displayedBook = com.example.ui.util.BibleBookNames.getDisplayName(
+                selectedBook,
+                if (bibleVersion == com.example.ui.util.BibleVersion.FRANCAIS_LSG) "fr" else appLanguage
+            )
+
             TopAppBar(
                 title = {
                     TextButton(onClick = { navController.navigate("book_selection") }) {
                         Text(
-                            text = "$selectedBook $selectedChapter",
+                            text = "$displayedBook $selectedChapter",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onBackground
@@ -117,18 +127,74 @@ fun ReaderScreen(
                     }
                 },
                 actions = {
+                    // Quick Bible Version Switcher
+                    Box {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                            modifier = Modifier.clickable { showVersionMenu = true }
+                        ) {
+                            Text(
+                                text = when (bibleVersion) {
+                                    com.example.ui.util.BibleVersion.FRANCAIS_LSG -> "FR"
+                                    com.example.ui.util.BibleVersion.BILINGUAL -> "FR+HT"
+                                    else -> "HT"
+                                },
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showVersionMenu,
+                            onDismissRequest = { showVersionMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("🇭🇹 Bib Kreyòl Ayisyen") },
+                                onClick = {
+                                    viewModel.setBibleVersion(com.example.ui.util.BibleVersion.KREYOL)
+                                    showVersionMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("🇫🇷 Français (Louis Segond 1910)") },
+                                onClick = {
+                                    viewModel.setBibleVersion(com.example.ui.util.BibleVersion.FRANCAIS_LSG)
+                                    showVersionMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("📖 Kòt a kòt (Bilingue)") },
+                                onClick = {
+                                    viewModel.setBibleVersion(com.example.ui.util.BibleVersion.BILINGUAL)
+                                    showVersionMenu = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
                     IconButton(onClick = { showFontSizeSheet = true }) {
                         Icon(
                             imageVector = Icons.Default.FormatSize,
-                            contentDescription = "Gwosè Tèks",
+                            contentDescription = if (appLanguage == "fr") "Taille du Texte" else "Gwosè Tèks",
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(onClick = {
                         val sendIntent: Intent = Intent().apply {
                             action = Intent.ACTION_SEND
-                            val text = currentVerses.joinToString("\n") { "${it.verseNumber}. ${it.text}" }
-                            putExtra(Intent.EXTRA_TEXT, "$selectedBook $selectedChapter\n\n$text")
+                            val text = currentVerses.joinToString("\n") { v ->
+                                val fr = frenchVerses[v.verseNumber]
+                                when (bibleVersion) {
+                                    com.example.ui.util.BibleVersion.FRANCAIS_LSG -> "${v.verseNumber}. ${fr ?: v.text}"
+                                    com.example.ui.util.BibleVersion.BILINGUAL -> if (!fr.isNullOrBlank()) "${v.verseNumber}. ${v.text}\n[FR] $fr" else "${v.verseNumber}. ${v.text}"
+                                    else -> "${v.verseNumber}. ${v.text}"
+                                }
+                            }
+                            putExtra(Intent.EXTRA_TEXT, "$displayedBook $selectedChapter\n\n$text")
                             type = "text/plain"
                         }
                         context.startActivity(Intent.createChooser(sendIntent, null))
@@ -198,11 +264,22 @@ fun ReaderScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(currentVerses, key = { it.id }) { verse ->
-                            VerseItem(verse, context, isDarkTheme, viewModel)
+                            VerseItem(
+                                verse = verse,
+                                context = context,
+                                isDarkTheme = isDarkTheme,
+                                viewModel = viewModel,
+                                frenchText = frenchVerses[verse.verseNumber],
+                                bibleVersion = bibleVersion,
+                                appLanguage = appLanguage
+                            )
                         }
                         if (currentVerses.isEmpty()) {
                             item {
-                                Text("Poko gen tèks pou chapit sa a nan baz done a.", modifier = Modifier.padding(16.dp))
+                                Text(
+                                    if (appLanguage == "fr") "Aucun texte trouvé pour ce chapitre dans la base de données." else "Poko gen tèks pou chapit sa a nan baz done a.",
+                                    modifier = Modifier.padding(16.dp)
+                                )
                             }
                         }
                     }
@@ -225,7 +302,15 @@ fun ReaderScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, isDarkTheme: Boolean, viewModel: BibleViewModel) {
+fun VerseItem(
+    verse: com.example.data.Verse,
+    context: android.content.Context,
+    isDarkTheme: Boolean,
+    viewModel: BibleViewModel,
+    frenchText: String? = null,
+    bibleVersion: String = com.example.ui.util.BibleVersion.KREYOL,
+    appLanguage: String = "ht"
+) {
     var showMenu by remember { mutableStateOf(false) }
     var showAddNoteDialog by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -305,14 +390,36 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(end = 8.dp, top = (4 * textSizeMultiplier).dp)
                 )
-                Text(
-                    text = verse.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontFamily = bibleFont,
-                    fontSize = 16.sp * textSizeMultiplier,
-                    lineHeight = (28 * textSizeMultiplier).sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+
+                val displayText = when (bibleVersion) {
+                    com.example.ui.util.BibleVersion.FRANCAIS_LSG -> frenchText ?: verse.text
+                    else -> verse.text
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = displayText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontFamily = bibleFont,
+                        fontSize = 16.sp * textSizeMultiplier,
+                        lineHeight = (28 * textSizeMultiplier).sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    // In Bilingual mode, show the French verse right below the Creole verse
+                    if (bibleVersion == com.example.ui.util.BibleVersion.BILINGUAL && !frenchText.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "🇫🇷 $frenchText",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = bibleFont,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            fontSize = 14.5.sp * textSizeMultiplier,
+                            lineHeight = (23 * textSizeMultiplier).sp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                        )
+                    }
+                }
             }
         }
 
@@ -342,7 +449,15 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
             }
             Divider()
             DropdownMenuItem(
-                text = { Text(if (verse.isBookmarked) "Retire nan favori" else "Ajoute nan favori") },
+                text = {
+                    Text(
+                        if (appLanguage == "fr") {
+                            if (verse.isBookmarked) "Retirer des favoris" else "Ajouter aux favoris"
+                        } else {
+                            if (verse.isBookmarked) "Retire nan favori" else "Ajoute nan favori"
+                        }
+                    )
+                },
                 onClick = {
                     showMenu = false
                     viewModel.toggleBookmark(verse)
@@ -356,7 +471,7 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
                 }
             )
             DropdownMenuItem(
-                text = { Text("Ajoute nòt") },
+                text = { Text(if (appLanguage == "fr") "Ajouter une note" else "Ajoute nòt") },
                 onClick = {
                     showMenu = false
                     showAddNoteDialog = true
@@ -364,12 +479,18 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
                 leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
             )
             DropdownMenuItem(
-                text = { Text("Pataje vèsè") },
+                text = { Text(if (appLanguage == "fr") "Partager le verset" else "Pataje vèsè") },
                 onClick = {
                     showMenu = false
+                    val shareBook = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, if (bibleVersion == com.example.ui.util.BibleVersion.FRANCAIS_LSG) "fr" else appLanguage)
+                    val shareVerseText = when (bibleVersion) {
+                        com.example.ui.util.BibleVersion.FRANCAIS_LSG -> frenchText ?: verse.text
+                        com.example.ui.util.BibleVersion.BILINGUAL -> if (!frenchText.isNullOrBlank()) "${verse.text}\n\n[FR] $frenchText" else verse.text
+                        else -> verse.text
+                    }
                     val sendIntent: Intent = Intent().apply {
                         action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, "${verse.book} ${verse.chapter}:${verse.verseNumber}\n\n${verse.text}")
+                        putExtra(Intent.EXTRA_TEXT, "$shareBook ${verse.chapter}:${verse.verseNumber}\n\n$shareVerseText")
                         type = "text/plain"
                     }
                     context.startActivity(Intent.createChooser(sendIntent, null))
@@ -381,14 +502,20 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
         if (showAddNoteDialog) {
             var noteTitle by remember { mutableStateOf("") }
             var noteContent by remember { mutableStateOf("") }
+            val noteBookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, if (bibleVersion == com.example.ui.util.BibleVersion.FRANCAIS_LSG) "fr" else appLanguage)
             AlertDialog(
                 onDismissRequest = { showAddNoteDialog = false },
-                title = { Text("Nòt pou ${verse.book} ${verse.chapter}:${verse.verseNumber}") },
+                title = { Text(if (appLanguage == "fr") "Note pour $noteBookName ${verse.chapter}:${verse.verseNumber}" else "Nòt pou $noteBookName ${verse.chapter}:${verse.verseNumber}") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         NeumorphicCard(isDarkTheme = isDarkTheme) {
+                            val dialogVerseText = when (bibleVersion) {
+                                com.example.ui.util.BibleVersion.FRANCAIS_LSG -> frenchText ?: verse.text
+                                com.example.ui.util.BibleVersion.BILINGUAL -> if (!frenchText.isNullOrBlank()) "${verse.text}\n\n[FR] $frenchText" else verse.text
+                                else -> verse.text
+                            }
                             Text(
-                                text = verse.text,
+                                text = dialogVerseText,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                 modifier = Modifier.padding(12.dp)
@@ -398,16 +525,16 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
                             value = noteTitle,
                             onValueChange = { noteTitle = it },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("TIT NÒT LA (OPSYONÈL)") },
-                            placeholder = { Text("Mete yon tit pou nòt sa a...") },
+                            label = { Text(if (appLanguage == "fr") "TITRE DE LA NOTE (OPTIONNEL)" else "TIT NÒT LA (OPSYONÈL)") },
+                            placeholder = { Text(if (appLanguage == "fr") "Donnez un titre à cette note..." else "Mete yon tit pou nòt sa a...") },
                             singleLine = true
                         )
                         OutlinedTextField(
                             value = noteContent,
                             onValueChange = { noteContent = it },
                             modifier = Modifier.fillMaxWidth().height(120.dp),
-                            label = { Text("KÒ NÒT LA") },
-                            placeholder = { Text("Tape kontni nòt ou la...") }
+                            label = { Text(if (appLanguage == "fr") "CORPS DE LA NOTE" else "KÒ NÒT LA") },
+                            placeholder = { Text(if (appLanguage == "fr") "Écrivez votre note ici..." else "Tape kontni nòt ou la...") }
                         )
                     }
                 },
@@ -419,12 +546,12 @@ fun VerseItem(verse: com.example.data.Verse, context: android.content.Context, i
                             showAddNoteDialog = false
                         }
                     }) {
-                        Text("Anrejistre")
+                        Text(if (appLanguage == "fr") "Enregistrer" else "Anrejistre")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showAddNoteDialog = false }) {
-                        Text("Anile")
+                        Text(if (appLanguage == "fr") "Annuler" else "Anile")
                     }
                 }
             )

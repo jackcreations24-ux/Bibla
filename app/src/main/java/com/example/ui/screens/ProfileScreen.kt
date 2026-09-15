@@ -56,6 +56,9 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
 
+    val appLanguage by viewModel.appLanguage.collectAsState()
+    val bibleVersion by viewModel.bibleVersion.collectAsState()
+
     val reminderHour by viewModel.readingPlanReminderHour.collectAsState()
     val reminderMinute by viewModel.readingPlanReminderMinute.collectAsState()
     val reminderEnabled by viewModel.readingPlanReminderEnabled.collectAsState()
@@ -128,7 +131,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pwofil & Anviwònman") },
+                title = { Text(if (appLanguage == "fr") "Profil & Paramètres" else "Pwofil & Anviwònman") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -159,14 +162,14 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Kretyen nan la fwa nan Jezi-Kris",
+                            if (appLanguage == "fr") "Chrétiens dans la foi en Jésus-Christ" else "Kretyen nan la fwa nan Jezi-Kris",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Vizyon app la se pou fè levanjil ale pi lwen selon Matye 28.",
+                            if (appLanguage == "fr") "La vision de l'application est de propager l'Évangile selon Matthieu 28." else "Vizyon app la se pou fè levanjil ale pi lwen selon Matye 28.",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -178,16 +181,124 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Settings
             item {
                 Text(
-                    "Anviwònman",
+                    if (appLanguage == "fr") "Paramètres de l'application" else "Anviwònman",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )
                 NeumorphicCard(isDarkTheme = isDarkTheme, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // Language Selection
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    if (appLanguage == "fr") "Langue de l'application & de la Bible" else "Lang Aplikasyon an & Bib la",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                if (appLanguage == "fr") "Ce choix s'applique à toute l'application et sélectionne automatiquement la version de la Bible."
+                                else "Chwa sa a aplike pou tout aplikasyon an e li chanje vèsyon Bib la otomatikman.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val langOptions = listOf(
+                                    Pair("ht", "🇭🇹 Kreyòl"),
+                                    Pair("fr", "🇫🇷 Français")
+                                )
+                                langOptions.forEach { (code, label) ->
+                                    val isSelected = appLanguage == code
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = {
+                                            viewModel.setAppLanguage(code)
+                                            val msg = if (code == "fr") {
+                                                "Langue et Bible appliquées en Français !"
+                                            } else {
+                                                "Lang aplikasyon an ak Bib la chanje an Kreyòl !"
+                                            }
+                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        label = {
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = androidx.compose.ui.graphics.Color.White
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                        // Bible Version Selection
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Book, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    if (appLanguage == "fr") "Version de la Bible" else "Vèsyon Bib la",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val versionOptions = listOf(
+                                    Pair(com.example.ui.util.BibleVersion.KREYOL, if (appLanguage == "fr") "Créole" else "Kreyòl"),
+                                    Pair(com.example.ui.util.BibleVersion.FRANCAIS_LSG, if (appLanguage == "fr") "Français (LSG)" else "Fransè (LSG)"),
+                                    Pair(com.example.ui.util.BibleVersion.BILINGUAL, if (appLanguage == "fr") "Bilingue" else "Kòt a kòt")
+                                )
+                                versionOptions.forEach { (code, label) ->
+                                    val isSelected = bibleVersion == code
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { viewModel.setBibleVersion(code) },
+                                        modifier = Modifier.weight(1f),
+                                        label = {
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = androidx.compose.ui.graphics.Color.White
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
                         SettingsToggleItem(
                             icon = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                            label = "Mòd Tèm",
+                            label = if (appLanguage == "fr") "Mode Sombre" else "Mòd Tèm",
                             value = isDarkTheme,
                             onToggle = { viewModel.toggleDarkMode() }
                         )
@@ -203,7 +314,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.FormatSize, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text("Gwosè Tèks", style = MaterialTheme.typography.bodyLarge)
+                                Text(if (appLanguage == "fr") "Taille du Texte" else "Gwosè Tèks", style = MaterialTheme.typography.bodyLarge)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { viewModel.decreaseTextSize() }) {
@@ -224,7 +335,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.TextFields, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text("Style Font Bib la", style = MaterialTheme.typography.bodyLarge)
+                                Text(if (appLanguage == "fr") "Style de Police de la Bible" else "Style Font Bib la", style = MaterialTheme.typography.bodyLarge)
                             }
                             Spacer(modifier = Modifier.height(10.dp))
                             Row(
@@ -266,7 +377,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                         val isVisualComfort by viewModel.isVisualComfortEnabled.collectAsState()
                         SettingsToggleItem(
                             icon = Icons.Default.Visibility,
-                            label = "Konfò Vizyèl",
+                            label = if (appLanguage == "fr") "Confort Visuel" else "Konfò Vizyèl",
                             value = isVisualComfort,
                             onToggle = { viewModel.toggleVisualComfort() }
                         )
@@ -275,12 +386,16 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         SettingsToggleItem(
                             icon = Icons.Default.Notifications,
-                            label = "Rapèl Lekti Chak Jou",
+                            label = if (appLanguage == "fr") "Rappel de Lecture Quotidien" else "Rapèl Lekti Chak Jou",
                             value = reminderEnabled,
                             onToggle = {
                                 val newState = !reminderEnabled
                                 viewModel.setReadingPlanReminder(newState, reminderHour, reminderMinute)
-                                val msg = if (newState) "Rapèl lekti aktif pou $reminderFormattedTime" else "Rapèl lekti dezaktive"
+                                val msg = if (newState) {
+                                    if (appLanguage == "fr") "Rappel de lecture actif pour $reminderFormattedTime" else "Rapèl lekti aktif pou $reminderFormattedTime"
+                                } else {
+                                    if (appLanguage == "fr") "Rappel de lecture désactivé" else "Rapèl lekti dezaktive"
+                                }
                                 android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                             }
                         )
@@ -308,12 +423,12 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Column {
                                         Text(
-                                            "Lè Egzak Pou Rapèl la",
+                                            if (appLanguage == "fr") "Heure Exacte du Rappel" else "Lè Egzak Pou Rapèl la",
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
-                                            "Klike la a pou w chanje lè a",
+                                            if (appLanguage == "fr") "Cliquez ici pour changer l'heure" else "Klike la a pou w chanje lè a",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -337,7 +452,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Icon(
                                             Icons.Default.Edit,
-                                            contentDescription = "Chanje lè a",
+                                            contentDescription = if (appLanguage == "fr") "Modifier l'heure" else "Chanje lè a",
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                             modifier = Modifier.size(14.dp)
                                         )
@@ -350,7 +465,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         SettingsActionItem(
                             icon = Icons.AutoMirrored.Filled.MenuBook,
-                            label = "Plan Lekti Bib la & Pwogrè",
+                            label = if (appLanguage == "fr") "Plans de Lecture & Progression" else "Plan Lekti Bib la & Pwogrè",
                             onClick = { navController.navigate("reading_plans") }
                         )
 
@@ -358,7 +473,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         SettingsActionItem(
                             icon = Icons.Default.NotificationsActive,
-                            label = "Gade Notifikasyon Yo",
+                            label = if (appLanguage == "fr") "Voir les Notifications" else "Gade Notifikasyon Yo",
                             onClick = { navController.navigate("notifications") }
                         )
                     }
@@ -368,7 +483,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Monetization & Bib Premium
             item {
                 Text(
-                    "Monetizasyon & Premium",
+                    if (appLanguage == "fr") "Monétisation & Premium" else "Monetizasyon & Premium",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
@@ -398,12 +513,12 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
-                                            text = "Rekonpans Ou Yo",
+                                            text = if (appLanguage == "fr") "Vos Récompenses" else "Rekonpans Ou Yo",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Chak videyo jwenn = 1 rekonpans",
+                                            text = if (appLanguage == "fr") "Chaque vidéo vue = 1 récompense" else "Chak videyo jwenn = 1 rekonpans",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -414,7 +529,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                     shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
                                 ) {
                                     Text(
-                                        text = "$rewardCount rekonpans",
+                                        text = "$rewardCount ${if (appLanguage == "fr") (if (rewardCount > 1) "récompenses" else "récompense") else "rekonpans"}",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = androidx.compose.ui.graphics.Color.White,
@@ -437,7 +552,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = androidx.compose.ui.graphics.Color(0xFF10B981))
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        "Ou se yon manm Bib Premium ($2.99) • Zero Anons!",
+                                        if (appLanguage == "fr") "Vous êtes membre Bible Premium ($2.99) • Zéro Publicité !" else "Ou se yon manm Bib Premium ($2.99) • Zero Anons!",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = androidx.compose.ui.graphics.Color(0xFF10B981)
@@ -457,7 +572,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                 ) {
                                     Icon(Icons.Default.WorkspacePremium, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White)
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Text("Debloke Bib Premium ($2.99)", fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
+                                    Text(if (appLanguage == "fr") "Débloquer Bible Premium ($2.99)" else "Debloke Bib Premium ($2.99)", fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
                                 }
                             }
 
@@ -472,7 +587,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                 ) {
                                     Icon(Icons.Default.CardGiftcard, contentDescription = null, tint = androidx.compose.ui.graphics.Color(0xFF10B981))
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Text("Gade yon anons 15s pou rekonpans", fontWeight = FontWeight.Bold)
+                                    Text(if (appLanguage == "fr") "Regarder une vidéo de 15s pour une récompense" else "Gade yon anons 15s pou rekonpans", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -483,18 +598,18 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: App Features
             item {
                 Text(
-                    "Karakteristik App la",
+                    if (appLanguage == "fr") "Fonctionnalités de l'Application" else "Karakteristik App la",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )
                 NeumorphicCard(isDarkTheme = isDarkTheme, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        FeatureItem("Lekti Bib la an Kreyòl")
-                        FeatureItem("Vèsè pou jounen an")
-                        FeatureItem("Sistèm nòt pèsonèl")
-                        FeatureItem("Rechèch rapid")
-                        FeatureItem("Favori")
+                        FeatureItem(if (appLanguage == "fr") "Lecture de la Bible (Créole & Français)" else "Lekti Bib la an Kreyòl")
+                        FeatureItem(if (appLanguage == "fr") "Verset pour la journée" else "Vèsè pou jounen an")
+                        FeatureItem(if (appLanguage == "fr") "Système de notes personnelles" else "Sistèm nòt pèsonèl")
+                        FeatureItem(if (appLanguage == "fr") "Recherche rapide & thèmes" else "Rechèch rapid")
+                        FeatureItem(if (appLanguage == "fr") "Favoris et surlignages" else "Favori")
                     }
                 }
             }
@@ -502,7 +617,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Rate & Share App (Play Store)
             item {
                 Text(
-                    "Sipòte Misyon an & Evalyasyon",
+                    if (appLanguage == "fr") "Soutenir la Mission & Avis" else "Sipòte Misyon an & Evalyasyon",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
@@ -533,12 +648,12 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Evalye Nou sou Google Play Store",
+                                    if (appLanguage == "fr") "Notez-nous sur Google Play Store" else "Evalye Nou sou Google Play Store",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "Mete 5 zetwal ⭐⭐⭐⭐⭐ pou ede levanjil la pwopaje",
+                                    if (appLanguage == "fr") "Mettez 5 étoiles ⭐⭐⭐⭐⭐ pour propager l'Évangile" else "Mete 5 zetwal ⭐⭐⭐⭐⭐ pou ede levanjil la pwopaje",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -556,11 +671,15 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                                         action = Intent.ACTION_SEND
                                         putExtra(
                                             Intent.EXTRA_TEXT,
-                                            "Mwen rekòmande w telechaje aplikasyon \"Bib La • Edisyon Enpakt\" an Kreyòl Ayisyen gratis sou Google Play Store: https://play.google.com/store/apps/details?id=$playStorePackage"
+                                            if (appLanguage == "fr") {
+                                                "Je vous recommande de télécharger l'application \"La Sainte Bible • Édition Impact\" gratuitement sur Google Play Store: https://play.google.com/store/apps/details?id=$playStorePackage"
+                                            } else {
+                                                "Mwen rekòmande w telechaje aplikasyon \"Bib La • Edisyon Enpakt\" an Kreyòl Ayisyen gratis sou Google Play Store: https://play.google.com/store/apps/details?id=$playStorePackage"
+                                            }
                                         )
                                         type = "text/plain"
                                     }
-                                    val shareIntent = Intent.createChooser(sendIntent, "Pataje Bib La")
+                                    val shareIntent = Intent.createChooser(sendIntent, if (appLanguage == "fr") "Partager la Bible" else "Pataje Bib La")
                                     context.startActivity(shareIntent)
                                 }
                                 .padding(vertical = 8.dp),
@@ -575,12 +694,12 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Pataje Bib La ak Fanmi & Zanmi",
+                                    if (appLanguage == "fr") "Partager la Bible avec Famille & Amis" else "Pataje Bib La ak Fanmi & Zanmi",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "Beni yon moun jodi a avèk Pawòl Bondye a",
+                                    if (appLanguage == "fr") "Bénissez une personne aujourd'hui avec la Parole de Dieu" else "Beni yon moun jodi a avèk Pawòl Bondye a",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -594,7 +713,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Follow Us (Rezo Sosyo)
             item {
                 Text(
-                    "Swiv Nou sou Rezo Sosyo",
+                    if (appLanguage == "fr") "Suivez-nous sur les Réseaux Sociaux" else "Swiv Nou sou Rezo Sosyo",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
@@ -603,7 +722,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         DeveloperContactItem(
                             icon = Icons.Default.SmartDisplay,
-                            text = "YouTube • Chanèl Ofisyèl Bib La"
+                            text = if (appLanguage == "fr") "YouTube • Chaîne Officielle" else "YouTube • Chanèl Ofisyèl Bib La"
                         ) {
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(youtubeUrl))
@@ -617,7 +736,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         DeveloperContactItem(
                             icon = Icons.Default.Public,
-                            text = "Facebook • Kominote Bib La"
+                            text = if (appLanguage == "fr") "Facebook • Communauté" else "Facebook • Kominote Bib La"
                         ) {
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(facebookUrl))
@@ -631,7 +750,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         DeveloperContactItem(
                             icon = Icons.Default.Chat,
-                            text = "WhatsApp • Kominote & Priyè"
+                            text = if (appLanguage == "fr") "WhatsApp • Communauté & Prière" else "WhatsApp • Kominote & Priyè"
                         ) {
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(whatsappUrl))
@@ -647,7 +766,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Legal & Compliance (Play Store Standards)
             item {
                 Text(
-                    "Legal & Konfidansyalite",
+                    if (appLanguage == "fr") "Mentions Légales & Confidentialité" else "Legal & Konfidansyalite",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
@@ -656,7 +775,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         SettingsActionItem(
                             icon = Icons.Default.PrivacyTip,
-                            label = "Politik Konfidansyalite (Privacy Policy)",
+                            label = if (appLanguage == "fr") "Politique de Confidentialité (Privacy Policy)" else "Politik Konfidansyalite (Privacy Policy)",
                             onClick = { showPrivacyDialog = true }
                         )
 
@@ -664,7 +783,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         SettingsActionItem(
                             icon = Icons.Default.Description,
-                            label = "Kondisyon Itilizasyon (Terms of Use)",
+                            label = if (appLanguage == "fr") "Conditions d'Utilisation (Terms of Use)" else "Kondisyon Itilizasyon (Terms of Use)",
                             onClick = { showTermsDialog = true }
                         )
 
@@ -672,7 +791,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
 
                         SettingsActionItem(
                             icon = Icons.Default.Gavel,
-                            label = "Enfòmasyon Legal & Dwa Otè",
+                            label = if (appLanguage == "fr") "Informations Légales & Droits d'Auteur" else "Enfòmasyon Legal & Dwa Otè",
                             onClick = { showLegalDialog = true }
                         )
                     }
@@ -682,14 +801,14 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             // Section: Developer Info
             item {
                 Text(
-                    "Kontak Devloper",
+                    if (appLanguage == "fr") "Contact Développeur" else "Kontak Devloper",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )
                 NeumorphicCard(isDarkTheme = isDarkTheme, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        DeveloperContactItem(Icons.Default.Person, "Jackson Charles (Devlopè)")
+                        DeveloperContactItem(Icons.Default.Person, if (appLanguage == "fr") "Jackson Charles (Développeur)" else "Jackson Charles (Devlopè)")
                         DeveloperContactItem(Icons.Default.Phone, developerPhone) {
                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$developerPhone"))
                             context.startActivity(intent)
@@ -713,7 +832,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.VolunteerActivism, contentDescription = null)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Fè yon donasyon", fontWeight = FontWeight.Bold)
+                        Text(if (appLanguage == "fr") "Faire un don" else "Fè yon donasyon", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -730,21 +849,21 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Bib La • Edisyon Enpakt",
+                        text = if (appLanguage == "fr") "La Sainte Bible • Édition Impact" else "Bib La • Edisyon Enpakt",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Vèsyon $versionName (Build $versionCode)",
+                        text = "${if (appLanguage == "fr") "Version" else "Vèsyon"} $versionName (Build $versionCode)",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Tout glwa pou Bondye • Matye 28:19-20",
+                        text = if (appLanguage == "fr") "Toute la gloire à Dieu • Matthieu 28:19-20" else "Tout glwa pou Bondye • Matye 28:19-20",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )

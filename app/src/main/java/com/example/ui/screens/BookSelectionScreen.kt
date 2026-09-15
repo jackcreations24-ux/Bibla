@@ -36,6 +36,7 @@ fun BookSelectionScreen(
     val systemInDarkTheme = isSystemInDarkTheme()
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedBook by remember { mutableStateOf<String?>(null) }
@@ -45,7 +46,11 @@ fun BookSelectionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (selectedBook == null) "Chwazi yon Liv" else selectedBook!!,
+                        text = if (selectedBook == null) {
+                            if (appLanguage == "fr") "Choisir un Livre" else "Chwazi yon Liv"
+                        } else {
+                            com.example.ui.util.BibleBookNames.getDisplayName(selectedBook!!, appLanguage)
+                        },
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -92,7 +97,7 @@ fun BookSelectionScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    "Ansyen Testaman",
+                                    if (appLanguage == "fr") "Ancien Testament" else "Ansyen Testaman",
                                     fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -112,7 +117,7 @@ fun BookSelectionScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    "Nouvo Testaman",
+                                    if (appLanguage == "fr") "Nouveau Testament" else "Nouvo Testaman",
                                     fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -131,7 +136,11 @@ fun BookSelectionScreen(
                 ) {
                     item {
                         Text(
-                            text = if (selectedTab == 0) "ANSYEN TESTAMAN (39 LIV)" else "NOUVO TESTAMAN (27 LIV)",
+                            text = if (appLanguage == "fr") {
+                                if (selectedTab == 0) "ANCIEN TESTAMENT (39 LIVRES)" else "NOUVEAU TESTAMENT (27 LIVRES)"
+                            } else {
+                                if (selectedTab == 0) "ANSYEN TESTAMAN (39 LIV)" else "NOUVO TESTAMAN (27 LIV)"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -141,6 +150,9 @@ fun BookSelectionScreen(
 
                     items(currentBooks) { book ->
                         val chapterCount = BibleData.getChapterCount(book)
+                        val primaryName = com.example.ui.util.BibleBookNames.getDisplayName(book, appLanguage)
+                        val subtitleName = com.example.ui.util.BibleBookNames.getSubtitleName(book, appLanguage)
+
                         NeumorphicCard(
                             isDarkTheme = isDarkTheme,
                             cornerRadius = 14.dp,
@@ -158,14 +170,23 @@ fun BookSelectionScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    Column {
+                                        Text(
+                                            text = primaryName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (subtitleName.isNotBlank()) {
+                                            Text(
+                                                text = subtitleName,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
                                     Text(
-                                        text = book,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "$chapterCount chapit",
+                                        text = if (appLanguage == "fr") "$chapterCount chapitres" else "$chapterCount chapit",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                     )
@@ -178,6 +199,7 @@ fun BookSelectionScreen(
                 // Chapter selection for the selected book
                 val book = selectedBook!!
                 val chapterCount = BibleData.getChapterCount(book)
+                val bookDisplayName = com.example.ui.util.BibleBookNames.getDisplayName(book, appLanguage)
 
                 Column(
                     modifier = Modifier
@@ -185,7 +207,7 @@ fun BookSelectionScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Chwazi chapit nan $book",
+                        text = if (appLanguage == "fr") "Choisir le chapitre dans $bookDisplayName" else "Chwazi chapit nan $bookDisplayName",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,

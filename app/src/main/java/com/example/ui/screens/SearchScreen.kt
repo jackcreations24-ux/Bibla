@@ -68,6 +68,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val textSizeMultiplier by viewModel.textSizeMultiplier.collectAsState()
     val fontFamilyType by viewModel.fontFamilyType.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     var showBookFilterDialog by remember { mutableStateOf(false) }
 
@@ -103,19 +104,19 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Retounen",
+                        contentDescription = if (appLanguage == "fr") "Retour" else "Retounen",
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Column {
                     Text(
-                        text = "Rechèch nan Bib la",
+                        text = if (appLanguage == "fr") "Recherche dans la Bible" else "Rechèch nan Bib la",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Jwenn nenpòt vèsè oswa mo kle",
+                        text = if (appLanguage == "fr") "Trouvez n'importe quel verset ou mot-clé" else "Jwenn nenpòt vèsè oswa mo kle",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
@@ -129,7 +130,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                     modifier = Modifier.padding(end = 4.dp)
                 ) {
                     Text(
-                        text = "${searchResults.size} jwenn",
+                        text = "${searchResults.size} ${if (appLanguage == "fr") "trouvé(s)" else "jwenn"}",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -160,7 +161,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                     },
                     placeholder = {
                         Text(
-                            text = "Tape yon mo oswa referans (egz: Jan 3:16, lapè)...",
+                            text = if (appLanguage == "fr") "Tapez un mot ou une référence (ex: Jean 3:16, paix)..." else "Tape yon mo oswa referans (egz: Jan 3:16, lapè)...",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
@@ -171,7 +172,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Chèche",
+                            contentDescription = if (appLanguage == "fr") "Chercher" else "Chèche",
                             tint = if (query.isNotBlank()) PrimaryColor else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                         )
                     },
@@ -185,7 +186,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Efase",
+                                    contentDescription = if (appLanguage == "fr") "Effacer" else "Efase",
                                     tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                                 )
                             }
@@ -230,9 +231,9 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                     label = {
                         Text(
                             text = when (filter) {
-                                SearchTestamentFilter.ALL -> "📖 Tout Bib la"
-                                SearchTestamentFilter.OLD_TESTAMENT -> "📜 Ansyen Testaman"
-                                SearchTestamentFilter.NEW_TESTAMENT -> "✝️ Nouvo Testaman"
+                                SearchTestamentFilter.ALL -> if (appLanguage == "fr") "📖 Toute la Bible" else "📖 Tout Bib la"
+                                SearchTestamentFilter.OLD_TESTAMENT -> if (appLanguage == "fr") "📜 Ancien Testament" else "📜 Ansyen Testaman"
+                                SearchTestamentFilter.NEW_TESTAMENT -> if (appLanguage == "fr") "✝️ Nouveau Testament" else "✝️ Nouvo Testaman"
                             },
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 12.sp
@@ -249,6 +250,9 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
             // Book Filter Button
             item {
                 val isBookSelected = selectedBookFilter != null
+                val bookFilterLabel = selectedBookFilter?.let {
+                    com.example.ui.util.BibleBookNames.getDisplayName(it, appLanguage)
+                } ?: (if (appLanguage == "fr") "Filtrer par livre" else "Filtre pa Liv")
                 FilterChip(
                     selected = isBookSelected,
                     onClick = { showBookFilterDialog = true },
@@ -263,7 +267,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = selectedBookFilter ?: "Filtre pa Liv",
+                                text = bookFilterLabel,
                                 fontWeight = if (isBookSelected) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 12.sp
                             )
@@ -273,7 +277,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                         {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Retire filtre liv",
+                                contentDescription = if (appLanguage == "fr") "Retirer le filtre" else "Retire filtre liv",
                                 modifier = Modifier
                                     .size(14.dp)
                                     .clickable { viewModel.setSelectedBookFilter(null) }
@@ -319,7 +323,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Dènye rechèch yo",
+                                        text = if (appLanguage == "fr") "Recherches récentes" else "Dènye rechèch yo",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onBackground
@@ -330,7 +334,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
-                                        text = "Efase tout",
+                                        text = if (appLanguage == "fr") "Tout effacer" else "Efase tout",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -364,7 +368,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                             )
                                             Icon(
                                                 imageVector = Icons.Default.Close,
-                                                contentDescription = "Efase",
+                                                contentDescription = if (appLanguage == "fr") "Supprimer" else "Efase",
                                                 modifier = Modifier
                                                     .size(12.dp)
                                                     .clickable { viewModel.removeRecentSearch(term) },
@@ -392,7 +396,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 tint = Color(0xFFF59E0B)
                             )
                             Text(
-                                text = "Tèm Espirityèl Popilè",
+                                text = if (appLanguage == "fr") "Thèmes Spirituels Populaires" else "Tèm Espirityèl Popilè",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
@@ -400,20 +404,37 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        val popularThemes = listOf(
-                            ThemeSearchItem("❤️ Lanmou", "renmen", Color(0xFFEC4899)),
-                            ThemeSearchItem("🕊️ Lapè", "lapè", Color(0xFF0EA5E9)),
-                            ThemeSearchItem("🛡️ Lafwa", "lafwa", Color(0xFFF59E0B)),
-                            ThemeSearchItem("🌿 Sajès", "sajès", Color(0xFF10B981)),
-                            ThemeSearchItem("🌅 Espwa", "espwa", Color(0xFFF97316)),
-                            ThemeSearchItem("🙌 Gras", "gras", Color(0xFF8B5CF6)),
-                            ThemeSearchItem("🙏 Lapriyè", "priye", Color(0xFF6366F1)),
-                            ThemeSearchItem("⚔️ Fòs & Kouraj", "kouraj", Color(0xFFEF4444)),
-                            ThemeSearchItem("🤝 Padon", "padon", Color(0xFF14B8A6)),
-                            ThemeSearchItem("💡 Limyè", "limyè", Color(0xFFEAB308)),
-                            ThemeSearchItem("👑 Wayòm", "wayòm", Color(0xFF9333EA)),
-                            ThemeSearchItem("🩸 Delivrans", "delivrans", Color(0xFFDC2626))
-                        )
+                        val popularThemes = if (appLanguage == "fr") {
+                            listOf(
+                                ThemeSearchItem("❤️ Amour", "amour", Color(0xFFEC4899)),
+                                ThemeSearchItem("🕊️ Paix", "paix", Color(0xFF0EA5E9)),
+                                ThemeSearchItem("🛡️ Foi", "foi", Color(0xFFF59E0B)),
+                                ThemeSearchItem("🌿 Sagesse", "sagesse", Color(0xFF10B981)),
+                                ThemeSearchItem("🌅 Espérance", "espérance", Color(0xFFF97316)),
+                                ThemeSearchItem("🙌 Grâce", "grâce", Color(0xFF8B5CF6)),
+                                ThemeSearchItem("🙏 Prière", "prière", Color(0xFF6366F1)),
+                                ThemeSearchItem("⚔️ Force & Courage", "force", Color(0xFFEF4444)),
+                                ThemeSearchItem("🤝 Pardon", "pardon", Color(0xFF14B8A6)),
+                                ThemeSearchItem("💡 Lumière", "lumière", Color(0xFFEAB308)),
+                                ThemeSearchItem("👑 Royaume", "royaume", Color(0xFF9333EA)),
+                                ThemeSearchItem("🩸 Délivrance", "délivrance", Color(0xFFDC2626))
+                            )
+                        } else {
+                            listOf(
+                                ThemeSearchItem("❤️ Lanmou", "renmen", Color(0xFFEC4899)),
+                                ThemeSearchItem("🕊️ Lapè", "lapè", Color(0xFF0EA5E9)),
+                                ThemeSearchItem("🛡️ Lafwa", "lafwa", Color(0xFFF59E0B)),
+                                ThemeSearchItem("🌿 Sajès", "sajès", Color(0xFF10B981)),
+                                ThemeSearchItem("🌅 Espwa", "espwa", Color(0xFFF97316)),
+                                ThemeSearchItem("🙌 Gras", "gras", Color(0xFF8B5CF6)),
+                                ThemeSearchItem("🙏 Lapriyè", "priye", Color(0xFF6366F1)),
+                                ThemeSearchItem("⚔️ Fòs & Kouraj", "kouraj", Color(0xFFEF4444)),
+                                ThemeSearchItem("🤝 Padon", "padon", Color(0xFF14B8A6)),
+                                ThemeSearchItem("💡 Limyè", "limyè", Color(0xFFEAB308)),
+                                ThemeSearchItem("👑 Wayòm", "wayòm", Color(0xFF9333EA)),
+                                ThemeSearchItem("🩸 Delivrans", "delivrans", Color(0xFFDC2626))
+                            )
+                        }
 
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
@@ -460,7 +481,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Vèsè Kle yo renmen anpil",
+                                text = if (appLanguage == "fr") "Versets Clés Populaires" else "Vèsè Kle yo renmen anpil",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
@@ -468,16 +489,29 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        val popularVerses = listOf(
-                            PopularVerseRef("Jan 3:16", "Paske Bondye sitèlman renmen lemonn..."),
-                            PopularVerseRef("Sòm 23:1", "Seyè a se gadò mwen, mwen p'ap janm manke anyen..."),
-                            PopularVerseRef("Filipyen 4:13", "Mwen kapab fè tout bagay grasa Kris la..."),
-                            PopularVerseRef("Jeremi 29:11", "Plan mwen genyen pou nou se plan lapè..."),
-                            PopularVerseRef("Pwovèb 3:5", "Mete tout konfyans ou nan Seyè a..."),
-                            PopularVerseRef("Matye 6:33", "Chèche premyèman wayòm Bondye a..."),
-                            PopularVerseRef("Women 8:28", "Tout bagay travay ansanm pou byen moun ki renmen Bondye..."),
-                            PopularVerseRef("Ezayi 40:31", "Moun ki mete konfyans yo nan Seyè a jwenn nouvo fòs...")
-                        )
+                        val popularVerses = if (appLanguage == "fr") {
+                            listOf(
+                                PopularVerseRef("Jean 3:16", "Car Dieu a tant aimé le monde qu'il a donné son Fils unique..."),
+                                PopularVerseRef("Psaumes 23:1", "L'Éternel est mon berger: je ne manquerai de rien..."),
+                                PopularVerseRef("Philippiens 4:13", "Je puis tout par celui qui me fortifie..."),
+                                PopularVerseRef("Jérémie 29:11", "Car je connais les projets que j'ai formés sur vous..."),
+                                PopularVerseRef("Proverbes 3:5", "Confie-toi en l'Éternel de tout ton coeur..."),
+                                PopularVerseRef("Matthieu 6:33", "Cherchez premièrement le royaume et la justice de Dieu..."),
+                                PopularVerseRef("Romains 8:28", "Toutes choses concourent au bien de ceux qui aiment Dieu..."),
+                                PopularVerseRef("Ésaïe 40:31", "Mais ceux qui se confient en l'Éternel renouvellent leur force...")
+                            )
+                        } else {
+                            listOf(
+                                PopularVerseRef("Jan 3:16", "Paske Bondye sitèlman renmen lemonn..."),
+                                PopularVerseRef("Sòm 23:1", "Seyè a se gadò mwen, mwen p'ap janm manke anyen..."),
+                                PopularVerseRef("Filipyen 4:13", "Mwen kapab fè tout bagay grasa Kris la..."),
+                                PopularVerseRef("Jeremi 29:11", "Plan mwen genyen pou nou se plan lapè..."),
+                                PopularVerseRef("Pwovèb 3:5", "Mete tout konfyans ou nan Seyè a..."),
+                                PopularVerseRef("Matye 6:33", "Chèche premyèman wayòm Bondye a..."),
+                                PopularVerseRef("Women 8:28", "Tout bagay travay ansanm pou byen moun ki renmen Bondye..."),
+                                PopularVerseRef("Ezayi 40:31", "Moun ki mete konfyans yo nan Seyè a jwenn nouvo fòs...")
+                            )
+                        }
 
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             popularVerses.forEach { ref ->
@@ -545,7 +579,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             modifier = Modifier.size(36.dp)
                         )
                         Text(
-                            text = "N'ap chèche nan tèks Bib la...",
+                            text = if (appLanguage == "fr") "Recherche dans les écritures..." else "N'ap chèche nan tèks Bib la...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         )
@@ -578,13 +612,13 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             }
                         }
                         Text(
-                            text = "Nou pa jwenn okenn vèsè",
+                            text = if (appLanguage == "fr") "Aucun verset trouvé" else "Nou pa jwenn okenn vèsè",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Pa gen vèsè ki gen mo \"$query\" nan filtè ou chwazi a. Eseye chanje filtè a oswa tape yon lòt mo kle (egz: renmen, lapè, gras).",
+                            text = if (appLanguage == "fr") "Aucun verset ne contient \"$query\" avec ce filtre. Essayez de modifier les filtres ou tapez un autre terme (ex: amour, paix, foi)." else "Pa gen vèsè ki gen mo \"$query\" nan filtè ou chwazi a. Eseye chanje filtè a oswa tape yon lòt mo kle (egz: renmen, lapè, gras).",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -597,7 +631,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             },
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Chèche nan Tout Bib la")
+                            Text(if (appLanguage == "fr") "Chercher dans toute la Bible" else "Chèche nan Tout Bib la")
                         }
                     }
                 }
@@ -617,13 +651,13 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${searchResults.size} vèsè jwenn",
+                                text = "${searchResults.size} ${if (appLanguage == "fr") "verset(s) trouvé(s)" else "vèsè jwenn"}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Klike sou yon vèsè pou li chapit la",
+                                text = if (appLanguage == "fr") "Touchez un verset pour lire le chapitre" else "Klike sou yon vèsè pou li chapit la",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                             )
@@ -637,22 +671,25 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             isDarkTheme = isDarkTheme,
                             textSizeMultiplier = textSizeMultiplier,
                             fontFamilyType = fontFamilyType,
+                            appLanguage = appLanguage,
                             isBookmarked = bookmarkedIds.contains(verse.id),
                             onCardClick = {
                                 val encodedBook = android.net.Uri.encode(verse.book)
                                 navController.navigate("reader/$encodedBook/${verse.chapter}")
                             },
                             onCopyClick = {
-                                val textToCopy = "${verse.book} ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\""
+                                val bookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
+                                val textToCopy = "$bookName ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\""
                                 clipboardManager.setText(AnnotatedString(textToCopy))
-                                Toast.makeText(context, "Vèsè kopye: ${verse.book} ${verse.chapter}:${verse.verseNumber}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (appLanguage == "fr") "Verset copié: $bookName ${verse.chapter}:${verse.verseNumber}" else "Vèsè kopye: ${verse.book} ${verse.chapter}:${verse.verseNumber}", Toast.LENGTH_SHORT).show()
                             },
                             onShareClick = {
+                                val bookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, "${verse.book} ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\"\n\n— Bib La an Kreyòl")
+                                    putExtra(Intent.EXTRA_TEXT, "$bookName ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\"\n\n— ${if (appLanguage == "fr") "La Sainte Bible" else "Bib La an Kreyòl"}")
                                 }
-                                context.startActivity(Intent.createChooser(shareIntent, "Pataje vèsè"))
+                                context.startActivity(Intent.createChooser(shareIntent, if (appLanguage == "fr") "Partager le verset" else "Pataje vèsè"))
                             },
                             onBookmarkToggle = {
                                 viewModel.toggleBookmark(verse)
@@ -670,7 +707,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
             onDismissRequest = { showBookFilterDialog = false },
             title = {
                 Text(
-                    text = "Chwazi yon liv pou filtre",
+                    text = if (appLanguage == "fr") "Choisir un livre à filtrer" else "Chwazi yon liv pou filtre",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -694,7 +731,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 }
                         ) {
                             Text(
-                                text = "📖 Tout liv yo (Pa gen filtre)",
+                                text = if (appLanguage == "fr") "📖 Tous les livres (Sans filtre)" else "📖 Tout liv yo (Pa gen filtre)",
                                 fontWeight = if (selectedBookFilter == null) FontWeight.Bold else FontWeight.Normal,
                                 color = if (selectedBookFilter == null) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(12.dp)
@@ -705,7 +742,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
 
                     item {
                         Text(
-                            text = "ANSYEN TESTAMAN",
+                            text = if (appLanguage == "fr") "ANCIEN TESTAMENT" else "ANSYEN TESTAMAN",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -715,6 +752,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
 
                     items(BibleData.oldTestament) { book ->
                         val isSelected = selectedBookFilter == book
+                        val displayName = com.example.ui.util.BibleBookNames.getDisplayName(book, appLanguage)
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
@@ -726,7 +764,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 }
                         ) {
                             Text(
-                                text = book,
+                                text = displayName,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -736,7 +774,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
 
                     item {
                         Text(
-                            text = "NOUVO TESTAMAN",
+                            text = if (appLanguage == "fr") "NOUVEAU TESTAMENT" else "NOUVO TESTAMAN",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -746,6 +784,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
 
                     items(BibleData.newTestament) { book ->
                         val isSelected = selectedBookFilter == book
+                        val displayName = com.example.ui.util.BibleBookNames.getDisplayName(book, appLanguage)
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
@@ -757,7 +796,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                                 }
                         ) {
                             Text(
-                                text = book,
+                                text = displayName,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -768,7 +807,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
             },
             confirmButton = {
                 TextButton(onClick = { showBookFilterDialog = false }) {
-                    Text("Fèmen")
+                    Text(if (appLanguage == "fr") "Fermer" else "Fèmen")
                 }
             }
         )
@@ -782,6 +821,7 @@ fun SearchResultVerseCard(
     isDarkTheme: Boolean,
     textSizeMultiplier: Float,
     fontFamilyType: String,
+    appLanguage: String = "ht",
     isBookmarked: Boolean,
     onCardClick: () -> Unit,
     onCopyClick: () -> Unit,
@@ -819,8 +859,9 @@ fun SearchResultVerseCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val bookName = com.example.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
                     Text(
-                        text = "${verse.book} ${verse.chapter}:${verse.verseNumber}",
+                        text = "$bookName ${verse.chapter}:${verse.verseNumber}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -831,7 +872,11 @@ fun SearchResultVerseCard(
                         color = if (isNewTestament) Color(0xFF3B82F6).copy(alpha = 0.15f) else Color(0xFFF59E0B).copy(alpha = 0.15f)
                     ) {
                         Text(
-                            text = if (isNewTestament) "Nouvo Testaman" else "Ansyen Testaman",
+                            text = if (appLanguage == "fr") {
+                                if (isNewTestament) "Nouveau Testament" else "Ancien Testament"
+                            } else {
+                                if (isNewTestament) "Nouvo Testaman" else "Ansyen Testaman"
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -848,7 +893,7 @@ fun SearchResultVerseCard(
                 ) {
                     Icon(
                         imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Favori",
+                        contentDescription = if (appLanguage == "fr") "Favori" else "Favori",
                         tint = if (isBookmarked) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -883,7 +928,7 @@ fun SearchResultVerseCard(
                     modifier = Modifier.clickable { onCardClick() }
                 ) {
                     Text(
-                        text = "Li nan chapit la",
+                        text = if (appLanguage == "fr") "Lire dans le chapitre" else "Li nan chapit la",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -906,7 +951,7 @@ fun SearchResultVerseCard(
                         cornerRadius = 8.dp,
                         elevation = 1.dp,
                         isDarkTheme = isDarkTheme,
-                        modifier = Modifier.size(width = 72.dp, height = 30.dp)
+                        modifier = Modifier.size(width = if (appLanguage == "fr") 80.dp else 72.dp, height = 30.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -915,12 +960,12 @@ fun SearchResultVerseCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Kopye",
+                                contentDescription = if (appLanguage == "fr") "Copier" else "Kopye",
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Kopye",
+                                text = if (appLanguage == "fr") "Copier" else "Kopye",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -933,7 +978,7 @@ fun SearchResultVerseCard(
                         cornerRadius = 8.dp,
                         elevation = 1.dp,
                         isDarkTheme = isDarkTheme,
-                        modifier = Modifier.size(width = 72.dp, height = 30.dp)
+                        modifier = Modifier.size(width = if (appLanguage == "fr") 84.dp else 72.dp, height = 30.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -942,12 +987,12 @@ fun SearchResultVerseCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = "Pataje",
+                                contentDescription = if (appLanguage == "fr") "Partager" else "Pataje",
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Pataje",
+                                text = if (appLanguage == "fr") "Partager" else "Pataje",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -33,6 +33,7 @@ fun NotificationsScreen(navController: NavController, viewModel: BibleViewModel)
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val notifications by viewModel.notifications.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     val selectedIds = remember { mutableStateListOf<Long>() }
     val isSelectionMode = selectedIds.isNotEmpty()
@@ -42,19 +43,19 @@ fun NotificationsScreen(navController: NavController, viewModel: BibleViewModel)
             TopAppBar(
                 title = {
                     if (isSelectionMode) {
-                        Text("${selectedIds.size} seleksyone")
+                        Text(if (appLanguage == "fr") "${selectedIds.size} sélectionné(s)" else "${selectedIds.size} seleksyone")
                     } else {
-                        Text("Notifikasyon yo")
+                        Text(if (appLanguage == "fr") "Notifications" else "Notifikasyon yo")
                     }
                 },
                 navigationIcon = {
                     if (isSelectionMode) {
                         IconButton(onClick = { selectedIds.clear() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Fèmen seleksyon")
+                            Icon(Icons.Default.Close, contentDescription = if (appLanguage == "fr") "Fermer la sélection" else "Fèmen seleksyon")
                         }
                     } else {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = if (appLanguage == "fr") "Retour" else "Back")
                         }
                     }
                 },
@@ -68,7 +69,7 @@ fun NotificationsScreen(navController: NavController, viewModel: BibleViewModel)
                                 selectedIds.addAll(notifications.map { it.id })
                             }
                         }) {
-                            Icon(Icons.Default.SelectAll, contentDescription = "Seleksyone tout")
+                            Icon(Icons.Default.SelectAll, contentDescription = if (appLanguage == "fr") "Tout sélectionner" else "Seleksyone tout")
                         }
                         IconButton(onClick = {
                             val itemsToDelete = selectedIds.toList()
@@ -79,7 +80,7 @@ fun NotificationsScreen(navController: NavController, viewModel: BibleViewModel)
                         }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Siprime seleksyon",
+                                contentDescription = if (appLanguage == "fr") "Supprimer la sélection" else "Siprime seleksyon",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -104,7 +105,7 @@ fun NotificationsScreen(navController: NavController, viewModel: BibleViewModel)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Pa gen okenn notifikasyon pou kounye a.",
+                        if (appLanguage == "fr") "Aucune notification pour le moment." else "Pa gen okenn notifikasyon pou kounye a.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

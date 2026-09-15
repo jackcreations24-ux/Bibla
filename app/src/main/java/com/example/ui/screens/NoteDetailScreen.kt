@@ -53,6 +53,7 @@ fun NoteDetailScreen(
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
     val textSizeMultiplier by viewModel.textSizeMultiplier.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     var note by remember { mutableStateOf<Note?>(null) }
     var associatedVerse by remember { mutableStateOf<Verse?>(null) }
@@ -73,35 +74,37 @@ fun NoteDetailScreen(
                 context.contentResolver.openOutputStream(it)?.use { outputStream ->
                     outputStream.write(textToExport.toByteArray(Charsets.UTF_8))
                 }
-                Toast.makeText(context, "Nòt la sove nan fichye .txt avèk siksè!", Toast.LENGTH_LONG).show()
+                val successMsg = if (appLanguage == "fr") "Note enregistrée dans le fichier .txt avec succès !" else "Nòt la sove nan fichye .txt avèk siksè!"
+                Toast.makeText(context, successMsg, Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(context, "Erè lè w ap anregistre fichye a: ${e.message}", Toast.LENGTH_SHORT).show()
+                val errorMsg = if (appLanguage == "fr") "Erreur lors de l'enregistrement : ${e.message}" else "Erè lè w ap anregistre fichye a: ${e.message}"
+                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     fun prepareFormattedText(currentNote: Note, verse: Verse?): String {
-        val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy - HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy - HH:mm", if (appLanguage == "fr") Locale.FRENCH else Locale.getDefault())
         val dateStr = dateFormat.format(Date(currentNote.timestamp))
         val parsed = parseNoteContent(currentNote.content)
 
         return buildString {
             append("========================================\n")
-            append("           NÒT PÈSONÈL BIBLIK\n")
+            append(if (appLanguage == "fr") "           NOTE BIBLIQUE PERSONNELLE\n" else "           NÒT PÈSONÈL BIBLIK\n")
             append("========================================\n")
-            append("Dat: $dateStr\n")
+            append(if (appLanguage == "fr") "Date: $dateStr\n" else "Dat: $dateStr\n")
             if (verse != null) {
-                append("Vèsè: ${verse.book} ${verse.chapter}:${verse.verseNumber}\n")
-                append("Tèks vèsè: \"${verse.text}\"\n")
+                append(if (appLanguage == "fr") "Verset: ${verse.book} ${verse.chapter}:${verse.verseNumber}\n" else "Vèsè: ${verse.book} ${verse.chapter}:${verse.verseNumber}\n")
+                append(if (appLanguage == "fr") "Texte du verset: \"${verse.text}\"\n" else "Tèks vèsè: \"${verse.text}\"\n")
             }
             if (parsed.title.isNotBlank()) {
-                append("Tit: ${parsed.title}\n")
+                append(if (appLanguage == "fr") "Titre: ${parsed.title}\n" else "Tit: ${parsed.title}\n")
             }
             if (parsed.subtitle.isNotBlank()) {
-                append("Soutit: ${parsed.subtitle}\n")
+                append(if (appLanguage == "fr") "Sous-titre: ${parsed.subtitle}\n" else "Soutit: ${parsed.subtitle}\n")
             }
             append("\n----------------------------------------\n")
-            append("KONTNI NÒT LA:\n")
+            append(if (appLanguage == "fr") "CONTENU DE LA NOTE:\n" else "KONTNI NÒT LA:\n")
             append("----------------------------------------\n")
             append(if (parsed.title.isBlank() && parsed.subtitle.isBlank()) currentNote.content else parsed.body)
             append("\n========================================\n")
@@ -112,7 +115,7 @@ fun NoteDetailScreen(
         note?.let { n ->
             textToExport = prepareFormattedText(n, associatedVerse)
             val fileNameFormat = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault())
-            val defaultFileName = "Not_Biblik_${fileNameFormat.format(Date(n.timestamp))}.txt"
+            val defaultFileName = if (appLanguage == "fr") "Note_Biblique_${fileNameFormat.format(Date(n.timestamp))}.txt" else "Not_Biblik_${fileNameFormat.format(Date(n.timestamp))}.txt"
             createDocumentLauncher.launch(defaultFileName)
         }
     }
@@ -123,10 +126,10 @@ fun NoteDetailScreen(
             val shareIntent = Intent().apply {
                 action = Intent.ACTION_SEND
                 type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, "Nòt Biblik Pèsonèl")
+                putExtra(Intent.EXTRA_SUBJECT, if (appLanguage == "fr") "Note Biblique Personnelle" else "Nòt Biblik Pèsonèl")
                 putExtra(Intent.EXTRA_TEXT, formattedText)
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Pataje nòt pèsonèl ou"))
+            context.startActivity(Intent.createChooser(shareIntent, if (appLanguage == "fr") "Partager votre note personnelle" else "Pataje nòt pèsonèl ou"))
         }
     }
 
@@ -147,10 +150,10 @@ fun NoteDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detay Nòt", fontWeight = FontWeight.Bold) },
+                title = { Text(if (appLanguage == "fr") "Détail de la Note" else "Detay Nòt", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Retounen")
+                        Icon(Icons.Default.ArrowBack, contentDescription = if (appLanguage == "fr") "Retour" else "Retounen")
                     }
                 },
                 actions = {
@@ -166,7 +169,7 @@ fun NoteDetailScreen(
                         }) {
                             Icon(
                                 Icons.Default.Check,
-                                contentDescription = "Anregistre",
+                                contentDescription = if (appLanguage == "fr") "Enregistrer" else "Anregistre",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -186,7 +189,7 @@ fun NoteDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Nòt sa a pa egziste.",
+                    text = if (appLanguage == "fr") "Cette note n'existe pas." else "Nòt sa a pa egziste.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -222,9 +225,9 @@ fun NoteDetailScreen(
                             .padding(24.dp)
                     ) {
                         // Date & Time Header inside book page
-                        val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy - HH:mm", Locale.getDefault())
+                        val dateFormat = SimpleDateFormat("EEEE, d MMMM yyyy - HH:mm", if (appLanguage == "fr") Locale.FRENCH else Locale.getDefault())
                         Text(
-                            text = dateFormat.format(Date(note!!.timestamp)).uppercase(Locale.getDefault()),
+                            text = dateFormat.format(Date(note!!.timestamp)).uppercase(if (appLanguage == "fr") Locale.FRENCH else Locale.getDefault()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -269,7 +272,7 @@ fun NoteDetailScreen(
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text("Li nan Bib la", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                                Text(if (appLanguage == "fr") "Lire dans la Bible" else "Li nan Bib la", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                             }
                                         }
                                     }
@@ -298,8 +301,8 @@ fun NoteDetailScreen(
                                 OutlinedTextField(
                                     value = editedTitle,
                                     onValueChange = { editedTitle = it },
-                                    label = { Text("TIT NÒT LA", fontSize = 12.sp * textSizeMultiplier) },
-                                    placeholder = { Text("Egzanp: Meditasyon sou Lafwa...", fontSize = 15.sp * textSizeMultiplier) },
+                                    label = { Text(if (appLanguage == "fr") "TITRE DE LA NOTE" else "TIT NÒT LA", fontSize = 12.sp * textSizeMultiplier) },
+                                    placeholder = { Text(if (appLanguage == "fr") "Exemple: Méditation sur la Foi..." else "Egzanp: Meditasyon sou Lafwa...", fontSize = 15.sp * textSizeMultiplier) },
                                     singleLine = true,
                                     textStyle = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
@@ -315,8 +318,8 @@ fun NoteDetailScreen(
                                 OutlinedTextField(
                                     value = editedSubtitle,
                                     onValueChange = { editedSubtitle = it },
-                                    label = { Text("SOUTIT / TÈM", fontSize = 12.sp * textSizeMultiplier) },
-                                    placeholder = { Text("Egzanp: Kwayans ak fòs nan lespwa...", fontSize = 15.sp * textSizeMultiplier) },
+                                    label = { Text(if (appLanguage == "fr") "SOUS-TITRE / THÈME" else "SOUTIT / TÈM", fontSize = 12.sp * textSizeMultiplier) },
+                                    placeholder = { Text(if (appLanguage == "fr") "Exemple: Confiance et force dans l'espérance..." else "Egzanp: Kwayans ak fòs nan lespwa...", fontSize = 15.sp * textSizeMultiplier) },
                                     singleLine = true,
                                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.SemiBold,
@@ -332,8 +335,8 @@ fun NoteDetailScreen(
                                 OutlinedTextField(
                                     value = editedBody,
                                     onValueChange = { editedBody = it },
-                                    label = { Text("KÒ NÒT LA", fontSize = 12.sp * textSizeMultiplier) },
-                                    placeholder = { Text("Ekri tout detay, refleksyon, ak pwen kle yo la...", fontSize = 15.sp * textSizeMultiplier) },
+                                    label = { Text(if (appLanguage == "fr") "CORPS DE LA NOTE" else "KÒ NÒT LA", fontSize = 12.sp * textSizeMultiplier) },
+                                    placeholder = { Text(if (appLanguage == "fr") "Écrivez ici toutes vos réflexions, notes et points clés..." else "Ekri tout detay, refleksyon, ak pwen kle yo la...", fontSize = 15.sp * textSizeMultiplier) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .heightIn(min = 160.dp),
@@ -430,7 +433,7 @@ fun NoteDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Peze sou paj nòt la pou opsyon (Modifye, Pataje, Sove, Efase)",
+                            text = if (appLanguage == "fr") "Appuyez sur la note pour afficher les options (Modifier, Partager, Sauvegarder, Supprimer)" else "Peze sou paj nòt la pou opsyon (Modifye, Pataje, Sove, Efase)",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -458,7 +461,7 @@ fun NoteDetailScreen(
                             .padding(top = 8.dp)
                     ) {
                         Text(
-                            text = "Anregistre Chanjman Yo",
+                            text = if (appLanguage == "fr") "Enregistrer les modifications" else "Anregistre Chanjman Yo",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -475,7 +478,7 @@ fun NoteDetailScreen(
                 onDismissRequest = { showActionMenu = false },
                 title = {
                     Text(
-                        text = "Opsyon Nòt",
+                        text = if (appLanguage == "fr") "Options de la Note" else "Opsyon Nòt",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -507,7 +510,7 @@ fun NoteDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Text(
-                                    text = "Modifye Nòt La",
+                                    text = if (appLanguage == "fr") "Modifier la Note" else "Modifye Nòt La",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -536,7 +539,7 @@ fun NoteDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Text(
-                                    text = "Pataje Nòt La",
+                                    text = if (appLanguage == "fr") "Partager la Note" else "Pataje Nòt La",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -565,14 +568,14 @@ fun NoteDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Text(
-                                    text = "Sove kòm Fichye .TXT",
+                                    text = if (appLanguage == "fr") "Sauvegarder en .TXT" else "Sove kòm Fichye .TXT",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
                         }
 
-                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         // Action 4: Delete Note
                         Surface(
@@ -596,7 +599,7 @@ fun NoteDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Text(
-                                    text = "Efase Nòt La",
+                                    text = if (appLanguage == "fr") "Supprimer la Note" else "Efase Nòt La",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.error
@@ -607,7 +610,7 @@ fun NoteDetailScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showActionMenu = false }) {
-                        Text("Anile")
+                        Text(if (appLanguage == "fr") "Annuler" else "Anile")
                     }
                 }
             )
@@ -617,8 +620,8 @@ fun NoteDetailScreen(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Efase nòt?") },
-                text = { Text("Èske ou sèten ou vle efase nòt sa a?") },
+                title = { Text(if (appLanguage == "fr") "Supprimer la note ?" else "Efase nòt?") },
+                text = { Text(if (appLanguage == "fr") "Êtes-vous sûr de vouloir supprimer cette note ?" else "Èske ou sèten ou vle efase nòt sa a?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -628,12 +631,12 @@ fun NoteDetailScreen(
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Efase")
+                        Text(if (appLanguage == "fr") "Supprimer" else "Efase")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Anile")
+                        Text(if (appLanguage == "fr") "Annuler" else "Anile")
                     }
                 }
             )

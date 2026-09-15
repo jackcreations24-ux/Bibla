@@ -25,6 +25,9 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
     private val _dailyVerse = MutableStateFlow<Verse?>(null)
     val dailyVerse: StateFlow<Verse?> = _dailyVerse
 
+    private val _dailyVerseFrench = MutableStateFlow<String?>(null)
+    val dailyVerseFrench: StateFlow<String?> = _dailyVerseFrench
+
     val dailyVerseIsLiked = MutableStateFlow(false)
     val dailyVerseLikeCount = MutableStateFlow(142)
     val dailyVerseViewCount = MutableStateFlow(285)
@@ -78,6 +81,9 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
     val isSearching = MutableStateFlow(false)
 
     private fun resolveCanonicalBook(rawInput: String): String? {
+        val canonicalFromName = com.example.ui.util.BibleBookNames.toCanonical(rawInput)
+        if (com.example.data.BibleData.allBooks.contains(canonicalFromName)) return canonicalFromName
+
         val clean = rawInput.trim().lowercase()
             .replace("è", "e").replace("é", "e").replace("ò", "o").replace("à", "a")
         
@@ -288,6 +294,72 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled
 
     // Note Auto-save Draft state
+    private val frenchRepository = com.example.data.FrenchBibleRepository(application)
+
+    private val _appLanguage = MutableStateFlow(
+        prefs.getString("pref_app_language", com.example.ui.util.AppLanguage.HT) ?: com.example.ui.util.AppLanguage.HT
+    )
+    val appLanguage: StateFlow<String> = _appLanguage
+
+    private val _bibleVersion = MutableStateFlow(
+        run {
+            val savedLang = prefs.getString("pref_app_language", com.example.ui.util.AppLanguage.HT) ?: com.example.ui.util.AppLanguage.HT
+            val savedVersion = prefs.getString("pref_bible_version", null)
+            when {
+                savedVersion == com.example.ui.util.BibleVersion.BILINGUAL -> com.example.ui.util.BibleVersion.BILINGUAL
+                savedLang == com.example.ui.util.AppLanguage.FR -> com.example.ui.util.BibleVersion.FRANCAIS_LSG
+                savedVersion != null -> savedVersion
+                else -> com.example.ui.util.BibleVersion.KREYOL
+            }
+        }
+    )
+    val bibleVersion: StateFlow<String> = _bibleVersion
+
+    fun setAppLanguage(lang: String) {
+        _appLanguage.value = lang
+        prefs.edit().putString("pref_app_language", lang).apply()
+
+        // Automatically synchronize Bible version with app language
+        val targetVersion = if (lang == com.example.ui.util.AppLanguage.FR) {
+            com.example.ui.util.BibleVersion.FRANCAIS_LSG
+        } else {
+            com.example.ui.util.BibleVersion.KREYOL
+        }
+        setBibleVersion(targetVersion)
+
+        // Reload daily verse translation immediately
+        _dailyVerse.value?.let { daily ->
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val frMap = frenchRepository.getFrenchVersesForChapter(daily.book, daily.chapter)
+                    _dailyVerseFrench.value = frMap[daily.verseNumber]
+                } catch (e: Exception) {
+                    _dailyVerseFrench.value = null
+                }
+            }
+        }
+    }
+
+    fun setBibleVersion(version: String) {
+        _bibleVersion.value = version
+        prefs.edit().putString("pref_bible_version", version).apply()
+        _currentBookAndChapter.value?.let { (book, chapter) ->
+            loadFrenchVersesIfNeeded(book, chapter, version)
+        }
+    }
+
+    private val _frenchVersesForCurrentChapter = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val frenchVersesForCurrentChapter: StateFlow<Map<Int, String>> = _frenchVersesForCurrentChapter
+
+    fun loadFrenchVersesIfNeeded(book: String, chapter: Int, version: String = _bibleVersion.value) {
+        if (version == com.example.ui.util.BibleVersion.FRANCAIS_LSG || version == com.example.ui.util.BibleVersion.BILINGUAL) {
+            viewModelScope.launch {
+                val verses = frenchRepository.getFrenchVersesForChapter(book, chapter)
+                _frenchVersesForCurrentChapter.value = verses
+            }
+        }
+    }
+
     private val _noteDraftTitle = MutableStateFlow(
         prefs.getString("draft_note_title", "") ?: ""
     )
@@ -877,6 +949,13 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
             val daily = repository.getDailyVerse()
             _dailyVerse.value = daily
             if (daily != null) {
+                try {
+                    val frMap = frenchRepository.getFrenchVersesForChapter(daily.book, daily.chapter)
+                    _dailyVerseFrench.value = frMap[daily.verseNumber]
+                } catch (e: Exception) {
+                    _dailyVerseFrench.value = null
+                }
+
                 val keyLiked = "daily_verse_liked_${daily.id}"
                 val keyCount = "daily_verse_like_count_${daily.id}"
                 val keyViewCount = "daily_verse_view_count_${daily.id}"
@@ -907,6 +986,12 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
             val daily = repository.getDailyVerse()
             if (daily != null && daily.id != _dailyVerse.value?.id) {
                 _dailyVerse.value = daily
+                try {
+                    val frMap = frenchRepository.getFrenchVersesForChapter(daily.book, daily.chapter)
+                    _dailyVerseFrench.value = frMap[daily.verseNumber]
+                } catch (e: Exception) {
+                    _dailyVerseFrench.value = null
+                }
                 val keyLiked = "daily_verse_liked_${daily.id}"
                 val keyCount = "daily_verse_like_count_${daily.id}"
                 val keyViewCount = "daily_verse_view_count_${daily.id}"
@@ -1591,7 +1676,9 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setVerses(book: String, chapter: Int) {
-        _currentBookAndChapter.value = Pair(book, chapter)
+        val canonical = com.example.ui.util.BibleBookNames.toCanonical(book)
+        _currentBookAndChapter.value = Pair(canonical, chapter)
+        loadFrenchVersesIfNeeded(canonical, chapter)
     }
 
     fun setSearchQuery(query: String) {

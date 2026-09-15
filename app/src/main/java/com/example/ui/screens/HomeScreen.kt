@@ -54,6 +54,9 @@ import com.example.ui.theme.getBibleFontFamily
 @Composable
 fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
     val dailyVerse by viewModel.dailyVerse.collectAsState()
+    val dailyVerseFrench by viewModel.dailyVerseFrench.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
+    val bibleVersion by viewModel.bibleVersion.collectAsState()
     val isLiked by viewModel.dailyVerseIsLiked.collectAsState()
     val likeCount by viewModel.dailyVerseLikeCount.collectAsState()
     val viewCount by viewModel.dailyVerseViewCount.collectAsState()
@@ -146,13 +149,13 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                 }
             ) {
                 Text(
-                    text = "Bib La",
+                    text = if (appLanguage == "fr") "La Sainte Bible" else "Bib La",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "EDISYON ENPAKT",
+                    text = if (appLanguage == "fr") "ÉDITION IMPACT" else "EDISYON ENPAKT",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
@@ -217,7 +220,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Chèche vèsè oswa tèm...",
+                            text = if (appLanguage == "fr") "Rechercher des versets, des thèmes..." else "Chèche vèsè oswa tèm...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
@@ -242,7 +245,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                         tint = if (isAfterSunset) Color(0xFF818CF8) else Color(0xFFF59E0B)
                     )
                     Text(
-                        text = "VÈSÈ POU JODI A",
+                        text = if (appLanguage == "fr") "VERSET DU JOUR" else "VÈSÈ POU JODI A",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp,
@@ -353,6 +356,15 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                 }
 
                                 // Clickable verse text & reference area leading to direct reader
+                                val primaryVerseText = when (bibleVersion) {
+                                    com.example.ui.util.BibleVersion.FRANCAIS_LSG -> dailyVerseFrench ?: verse.text
+                                    else -> verse.text
+                                }
+                                val localizedBookName = com.example.ui.util.BibleBookNames.getDisplayName(
+                                    verse.book,
+                                    if (bibleVersion == com.example.ui.util.BibleVersion.FRANCAIS_LSG) "fr" else appLanguage
+                                )
+
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -361,7 +373,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         }
                                 ) {
                                     Text(
-                                        text = "\"${verse.text}\"",
+                                        text = "\"$primaryVerseText\"",
                                         style = MaterialTheme.typography.headlineSmall.copy(
                                             fontFamily = getBibleFontFamily(fontFamilyType),
                                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -370,6 +382,20 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         ),
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
+
+                                    if (bibleVersion == com.example.ui.util.BibleVersion.BILINGUAL && !dailyVerseFrench.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "\"$dailyVerseFrench\"",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                                fontSize = 15.sp * textSizeMultiplier,
+                                                lineHeight = (22 * textSizeMultiplier).sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                                        )
+                                    }
+
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -377,7 +403,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "${verse.book} ${verse.chapter}:${verse.verseNumber}",
+                                            text = "$localizedBookName ${verse.chapter}:${verse.verseNumber}",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontSize = 16.sp * textSizeMultiplier,
                                             fontWeight = FontWeight.Bold,
@@ -388,7 +414,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Text(
-                                                text = "Lekti konplè",
+                                                text = if (appLanguage == "fr") "Lecture complète" else "Lekti konplè",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = spiritualTheme.accentColor.copy(alpha = 0.9f)
@@ -573,7 +599,11 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    text = if (verse.isBookmarked) "Retire nan favori" else "Mete nan favori",
+                                                    text = if (appLanguage == "fr") {
+                                                        if (verse.isBookmarked) "Retirer des favoris" else "Ajouter aux favoris"
+                                                    } else {
+                                                        if (verse.isBookmarked) "Retire nan favori" else "Mete nan favori"
+                                                    },
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
@@ -595,7 +625,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    text = "Kopye vèsè",
+                                                    text = if (appLanguage == "fr") "Copier le verset" else "Kopye vèsè",
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
@@ -611,16 +641,17 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                             onClick = {
                                                 showVerseOptions = false
                                                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                                val clip = android.content.ClipData.newPlainText("Vèsè", "\"${verse.text}\"\n— ${verse.book} ${verse.chapter}:${verse.verseNumber}")
+                                                val clip = android.content.ClipData.newPlainText("Vèsè", "\"$primaryVerseText\"\n— $localizedBookName ${verse.chapter}:${verse.verseNumber}")
                                                 clipboard.setPrimaryClip(clip)
-                                                android.widget.Toast.makeText(context, "Vèsè kopye nan panyen!", android.widget.Toast.LENGTH_SHORT).show()
+                                                val toastMsg = if (appLanguage == "fr") "Verset copié !" else "Vèsè kopye nan panyen!"
+                                                android.widget.Toast.makeText(context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
                                             }
                                         )
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    text = "Pataje vèsè",
+                                                    text = if (appLanguage == "fr") "Partager le verset" else "Pataje vèsè",
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
@@ -637,10 +668,11 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                                 showVerseOptions = false
                                                 val shareIntent = Intent().apply {
                                                     action = Intent.ACTION_SEND
-                                                    putExtra(Intent.EXTRA_TEXT, "\"${verse.text}\"\n\n— ${verse.book} ${verse.chapter}:${verse.verseNumber}")
+                                                    putExtra(Intent.EXTRA_TEXT, "\"$primaryVerseText\"\n\n— $localizedBookName ${verse.chapter}:${verse.verseNumber}")
                                                     type = "text/plain"
                                                 }
-                                                context.startActivity(Intent.createChooser(shareIntent, "Pataje vèsè sa"))
+                                                val chooserTitle = if (appLanguage == "fr") "Partager ce verset" else "Pataje vèsè sa"
+                                                context.startActivity(Intent.createChooser(shareIntent, chooserTitle))
                                             }
                                         )
                                     }
@@ -658,7 +690,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "TÈM JODI A",
+                        text = if (appLanguage == "fr") "THÈME DU JOUR" else "TÈM JODI A",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp,
@@ -775,7 +807,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Gade yon anons 15s pou rekonpans",
+                                        text = if (appLanguage == "fr") "Regarder une vidéo de 15s pour une récompense" else "Gade yon anons 15s pou rekonpans",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -842,7 +874,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                 }
                                 Column {
                                     Text(
-                                        text = "PLAN LEKTI BIB LA",
+                                        text = if (appLanguage == "fr") "PLAN DE LECTURE BIBLIQUE" else "PLAN LEKTI BIB LA",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = Color(activePlan.colorPrimaryHex),
@@ -868,7 +900,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                     Text(text = "🔥", fontSize = 12.sp)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "$readingStreak ${if (readingStreak > 1) "jou" else "jou"}",
+                                        text = "$readingStreak ${if (appLanguage == "fr") (if (readingStreak > 1) "jours" else "jour") else "jou"}",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFFD97706),
@@ -887,7 +919,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Pwogrè: ${completedDays.size} / ${activePlan.totalDays} Jou",
+                                text = if (appLanguage == "fr") "Progression: ${completedDays.size} / ${activePlan.totalDays} Jours" else "Pwogrè: ${completedDays.size} / ${activePlan.totalDays} Jou",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -929,7 +961,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Jodi a (Jou ${day.dayNumber}):",
+                                            text = if (appLanguage == "fr") "Aujourd'hui (Jour ${day.dayNumber}):" else "Jodi a (Jou ${day.dayNumber}):",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -951,7 +983,11 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
-                                        Text("Li Kounye a", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (appLanguage == "fr") "Lire Maintenant" else "Li Kounye a",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -974,7 +1010,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Gade tout plan yo & rapèl",
+                                    text = if (appLanguage == "fr") "Voir tous les plans & rappels" else "Gade tout plan yo & rapèl",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(activePlan.colorPrimaryHex)
@@ -1001,14 +1037,18 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "DÈNYE LEKTI",
+                            text = if (appLanguage == "fr") "DERNIÈRE LECTURE" else "DÈNYE LEKTI",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
+                        val progressText = progress?.let {
+                            val b = com.example.ui.util.BibleBookNames.getDisplayName(it.book, appLanguage)
+                            "$b ${it.chapter}:${it.verseNumber}"
+                        } ?: (if (appLanguage == "fr") "Jean 3:16" else "Jan 3:16")
                         Text(
-                            text = progress?.let { "${it.book} ${it.chapter}:${it.verseNumber}" } ?: "Jan 3:16",
+                            text = progressText,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )

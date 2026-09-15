@@ -48,6 +48,7 @@ fun WelcomeScreen(
     val systemInDarkTheme = isSystemInDarkTheme()
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     Box(
         modifier = Modifier
@@ -105,7 +106,7 @@ fun WelcomeScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "BIB LA AN KREYÒL",
+                    text = if (appLanguage == "fr") "LA SAINTE BIBLE" else "BIB LA AN KREYÒL",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -150,7 +151,7 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Lapè ak Espwa",
+                        text = if (appLanguage == "fr") "Paix et Espérance" else "Lapè ak Espwa",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -160,7 +161,11 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "\"Mwen kite lapè pou nou. Mwen ban nou pwòp lapè pa m lan. Kè nou pa bezwen boulvèse, ni nou pa bezwen pè.\"",
+                        text = if (appLanguage == "fr") {
+                            "« Je vous laisse la paix, je vous donne ma paix. Je ne vous donne pas comme le monde donne. Que votre cœur ne se trouble point, et ne s'alarme point. »"
+                        } else {
+                            "\"Mwen kite lapè pou nou. Mwen ban nou pwòp lapè pa m lan. Kè nou pa bezwen boulvèse, ni nou pa bezwen pè.\""
+                        },
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontStyle = FontStyle.Italic,
                             lineHeight = 24.sp
@@ -172,7 +177,7 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "— Jan 14:27",
+                        text = if (appLanguage == "fr") "— Jean 14:27" else "— Jan 14:27",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF60A5FA) // Light blue accent
@@ -203,7 +208,7 @@ fun WelcomeScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Text(
-                        text = "KONTINYE",
+                        text = if (appLanguage == "fr") "CONTINUER" else "KONTINYE",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,

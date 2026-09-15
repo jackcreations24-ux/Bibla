@@ -165,11 +165,12 @@ class MainActivity : ComponentActivity() {
                                             horizontalArrangement = Arrangement.SpaceEvenly,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            val appLanguage by viewModel.appLanguage.collectAsState()
                                             val items = listOf(
-                                                Triple("home", Icons.Default.Home, "Akèy"),
-                                                Triple("reader", Icons.Default.Book, "Lekti"),
-                                                Triple("notes", Icons.Default.Notes, "Nòt"),
-                                                Triple("bookmarks", Icons.Default.Bookmark, "Favori")
+                                                Triple("home", Icons.Default.Home, if (appLanguage == "fr") "Accueil" else "Akèy"),
+                                                Triple("reader", Icons.Default.Book, if (appLanguage == "fr") "Lecture" else "Lekti"),
+                                                Triple("notes", Icons.Default.Notes, if (appLanguage == "fr") "Notes" else "Nòt"),
+                                                Triple("bookmarks", Icons.Default.Bookmark, if (appLanguage == "fr") "Favoris" else "Favori")
                                             )
 
                                             items.forEach { (route, icon, label) ->
