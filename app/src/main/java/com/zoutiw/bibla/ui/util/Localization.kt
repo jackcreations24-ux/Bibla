@@ -115,6 +115,10 @@ object BibleBookNames {
         creoleToFrench.entries.associate { (k, v) -> v.lowercase() to k }
     }
 
+    val usfmToCreole: Map<String, String> by lazy {
+        creoleToUsfm.entries.associate { (k, v) -> v to k }
+    }
+
     fun getDisplayName(creoleBook: String, lang: String): String {
         return if (lang == AppLanguage.FR) {
             creoleToFrench[creoleBook] ?: creoleBook

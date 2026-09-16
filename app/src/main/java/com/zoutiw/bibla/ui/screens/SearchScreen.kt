@@ -665,9 +665,13 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                     }
 
                     items(searchResults, key = { it.id }) { verse ->
+                        val frenchText = remember(verse.id) {
+                            viewModel.getFrenchVerse(verse.book, verse.chapter, verse.verseNumber)
+                        }
                         SearchResultVerseCard(
                             verse = verse,
                             searchQuery = query,
+                            frenchText = frenchText,
                             isDarkTheme = isDarkTheme,
                             textSizeMultiplier = textSizeMultiplier,
                             fontFamilyType = fontFamilyType,
@@ -679,15 +683,17 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
                             },
                             onCopyClick = {
                                 val bookName = com.zoutiw.bibla.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
-                                val textToCopy = "$bookName ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\""
+                                val copyVerseText = if (appLanguage == "fr" && !frenchText.isNullOrBlank()) frenchText else verse.text
+                                val textToCopy = "$bookName ${verse.chapter}:${verse.verseNumber}\n\"$copyVerseText\""
                                 clipboardManager.setText(AnnotatedString(textToCopy))
                                 Toast.makeText(context, if (appLanguage == "fr") "Verset copié: $bookName ${verse.chapter}:${verse.verseNumber}" else "Vèsè kopye: ${verse.book} ${verse.chapter}:${verse.verseNumber}", Toast.LENGTH_SHORT).show()
                             },
                             onShareClick = {
                                 val bookName = com.zoutiw.bibla.ui.util.BibleBookNames.getDisplayName(verse.book, appLanguage)
+                                val shareVerseText = if (appLanguage == "fr" && !frenchText.isNullOrBlank()) frenchText else verse.text
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, "$bookName ${verse.chapter}:${verse.verseNumber}\n\"${verse.text}\"\n\n— ${if (appLanguage == "fr") "La Sainte Bible" else "Bib La an Kreyòl"}")
+                                    putExtra(Intent.EXTRA_TEXT, "$bookName ${verse.chapter}:${verse.verseNumber}\n\"$shareVerseText\"\n\n— ${if (appLanguage == "fr") "La Sainte Bible" else "Bib La an Kreyòl"}")
                                 }
                                 context.startActivity(Intent.createChooser(shareIntent, if (appLanguage == "fr") "Partager le verset" else "Pataje vèsè"))
                             },
@@ -818,6 +824,7 @@ fun SearchScreen(navController: NavController, viewModel: BibleViewModel) {
 fun SearchResultVerseCard(
     verse: Verse,
     searchQuery: String,
+    frenchText: String? = null,
     isDarkTheme: Boolean,
     textSizeMultiplier: Float,
     fontFamilyType: String,
@@ -832,8 +839,12 @@ fun SearchResultVerseCard(
         verse.book in BibleData.newTestament
     }
 
-    val highlightedText = remember(verse.text, searchQuery, isDarkTheme) {
-        buildHighlightedVerseText(verse.text, searchQuery, isDarkTheme)
+    val isFrench = appLanguage == "fr"
+    val primaryText = if (isFrench && !frenchText.isNullOrBlank()) frenchText else verse.text
+    val secondaryText = if (isFrench && !frenchText.isNullOrBlank()) verse.text else if (!isFrench && !frenchText.isNullOrBlank()) frenchText else null
+
+    val highlightedPrimary = remember(primaryText, searchQuery, isDarkTheme) {
+        buildHighlightedVerseText(primaryText, searchQuery, isDarkTheme)
     }
 
     NeumorphicCard(
@@ -904,7 +915,7 @@ fun SearchResultVerseCard(
 
             // Verse Text with Keyword Highlight
             Text(
-                text = highlightedText,
+                text = highlightedPrimary,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontFamily = getBibleFontFamily(fontFamilyType),
                     fontSize = 15.sp * textSizeMultiplier,
@@ -912,6 +923,20 @@ fun SearchResultVerseCard(
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
+
+            if (!secondaryText.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (isFrench) "🇭🇹 $secondaryText" else "🇫🇷 $secondaryText",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = getBibleFontFamily(fontFamilyType),
+                        fontSize = 13.sp * textSizeMultiplier,
+                        lineHeight = (19 * textSizeMultiplier).sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

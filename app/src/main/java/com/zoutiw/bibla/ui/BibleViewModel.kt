@@ -148,8 +148,9 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
             clean.startsWith("1 tim") -> "1 Timote"
             clean.startsWith("2 tim") -> "2 Timote"
             clean.startsWith("tit") -> "Tit"
-            clean.startsWith("fil") || clean.startsWith("phi") -> "Filemon"
-            clean.startsWith("ebr") || clean.startsWith("heb") -> "Ebre"
+            clean.startsWith("filem") || clean.startsWith("phile") || clean.startsWith("phm") -> "Filemon"
+            clean.startsWith("fil") || clean.startsWith("phi") -> "Filipyen"
+            clean.startsWith("kol") || clean.startsWith("col") -> "Kolosyen"
             clean.startsWith("jak") || clean.startsWith("jam") || clean.startsWith("jac") -> "Jak"
             clean.startsWith("1 pye") || clean.startsWith("1 pet") || clean.startsWith("1 pie") -> "1 Pyè"
             clean.startsWith("2 pye") || clean.startsWith("2 pet") || clean.startsWith("2 pie") -> "2 Pyè"
@@ -210,8 +211,28 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
                 emptyList()
             }
 
+            // Search French New Testament offline bundle
+            val frenchNtMatches = try {
+                frenchRepository.searchNewTestament(query, 30)
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val frenchVerses = mutableListOf<Verse>()
+            for (match in frenchNtMatches) {
+                try {
+                    val exact = repository.getExactVerse(match.first, match.second, match.third)
+                    if (exact != null) {
+                        frenchVerses.add(exact)
+                    }
+                } catch (e: Exception) {
+                    // Ignore non-fatal lookup error
+                }
+            }
+
             val directIds = directMatches.map { it.id }.toSet()
-            val combined = (directMatches + keywordResults.filter { it.id !in directIds })
+            val existingIds = (directIds + keywordResults.map { it.id }).toMutableSet()
+            val extraFrench = frenchVerses.filter { it.id !in existingIds }
+            val combined = (directMatches + keywordResults.filter { it.id !in directIds } + extraFrench)
 
             val filtered = combined.filter { verse ->
                 val matchesBook = bookFilter == null || verse.book.equals(bookFilter, ignoreCase = true)
@@ -227,6 +248,10 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
             emit(filtered)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun getFrenchVerse(bookName: String, chapter: Int, verseNumber: Int): String? {
+        return frenchRepository.getFrenchVerseSync(bookName, chapter, verseNumber)
+    }
 
     private val prefs = application.getSharedPreferences("user_settings_prefs", android.content.Context.MODE_PRIVATE)
 

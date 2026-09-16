@@ -23,6 +23,46 @@ class FrenchBibleRepository(private val context: Context) {
     // In-memory cache for ultra-fast chapter switching
     private val memCache = mutableMapOf<String, Map<Int, String>>()
 
+    // In-memory cache for parsed asset books: usfm -> (chapter -> (verseNum -> verseText))
+    private val bookCache = mutableMapOf<String, Map<Int, Map<Int, String>>>()
+
+    private fun loadBookFromAssets(usfm: String): Map<Int, Map<Int, String>>? {
+        bookCache[usfm]?.let { return it }
+        return try {
+            val assetPath = "french_bible/$usfm.json"
+            context.assets.open(assetPath).use { inputStream ->
+                val jsonStr = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                val root = JSONObject(jsonStr)
+                val bookMap = mutableMapOf<Int, Map<Int, String>>()
+                val chapterKeys = root.keys()
+                while (chapterKeys.hasNext()) {
+                    val chKey = chapterKeys.next()
+                    val chNum = chKey.toIntOrNull() ?: continue
+                    val chObj = root.optJSONObject(chKey) ?: continue
+                    val versesMap = mutableMapOf<Int, String>()
+                    val verseKeys = chObj.keys()
+                    while (verseKeys.hasNext()) {
+                        val vKey = verseKeys.next()
+                        val vNum = vKey.toIntOrNull() ?: continue
+                        val vText = chObj.optString(vKey, "")
+                        if (vText.isNotBlank()) {
+                            versesMap[vNum] = vText
+                        }
+                    }
+                    if (versesMap.isNotEmpty()) {
+                        bookMap[chNum] = versesMap
+                    }
+                }
+                if (bookMap.isNotEmpty()) {
+                    bookCache[usfm] = bookMap
+                    bookMap
+                } else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // Pre-bundled key chapters for instant offline guarantee
     private val prebundledChapters: Map<String, Map<Int, String>> = mapOf(
         "GEN_1" to mapOf(
@@ -54,6 +94,44 @@ class FrenchBibleRepository(private val context: Context) {
         )
     )
 
+    fun getFrenchVerseSync(bookName: String, chapter: Int, verseNumber: Int): String? {
+        val usfm = BibleBookNames.getUsfmCode(bookName)
+        val key = "${usfm}_$chapter"
+        memCache[key]?.get(verseNumber)?.let { return it }
+        val loadedBook = loadBookFromAssets(usfm)
+        val verseText = loadedBook?.get(chapter)?.get(verseNumber)
+        if (verseText != null) {
+            return verseText
+        }
+        return prebundledChapters[key]?.get(verseNumber)
+    }
+
+    fun searchNewTestament(query: String, limit: Int = 40): List<Triple<String, Int, Int>> {
+        val cleanQuery = query.trim()
+        if (cleanQuery.length < 2) return emptyList()
+
+        val results = mutableListOf<Triple<String, Int, Int>>()
+        val ntUsfms = listOf(
+            "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH",
+            "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS",
+            "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"
+        )
+
+        for (usfm in ntUsfms) {
+            val bookMap = loadBookFromAssets(usfm) ?: continue
+            val creoleBook = BibleBookNames.usfmToCreole[usfm] ?: continue
+            for ((chNum, verses) in bookMap) {
+                for ((vNum, text) in verses) {
+                    if (text.contains(cleanQuery, ignoreCase = true)) {
+                        results.add(Triple(creoleBook, chNum, vNum))
+                        if (results.size >= limit) return results
+                    }
+                }
+            }
+        }
+        return results
+    }
+
     suspend fun getFrenchVersesForChapter(bookName: String, chapter: Int): Map<Int, String> = withContext(Dispatchers.IO) {
         val usfm = BibleBookNames.getUsfmCode(bookName)
         val key = "${usfm}_$chapter"
@@ -61,7 +139,15 @@ class FrenchBibleRepository(private val context: Context) {
         // 1. Check memory cache
         memCache[key]?.let { return@withContext it }
 
-        // 2. Check disk cache
+        // 2. Check bundled offline assets (All 27 New Testament books: 260 chapters)
+        val loadedBook = loadBookFromAssets(usfm)
+        val assetChapter = loadedBook?.get(chapter)
+        if (!assetChapter.isNullOrEmpty()) {
+            memCache[key] = assetChapter
+            return@withContext assetChapter
+        }
+
+        // 3. Check disk cache
         val cacheFile = File(cacheDir, "$key.json")
         if (cacheFile.exists()) {
             try {
@@ -76,7 +162,7 @@ class FrenchBibleRepository(private val context: Context) {
             }
         }
 
-        // 3. Fetch from HelloAO Open Bible API (Louis Segond 1910)
+        // 4. Fetch from HelloAO Open Bible API (Louis Segond 1910)
         try {
             val url = "https://bible.helloao.org/api/fra_lsg/$usfm/$chapter.json"
             val request = Request.Builder().url(url).build()
@@ -100,7 +186,7 @@ class FrenchBibleRepository(private val context: Context) {
             // Network error or offline
         }
 
-        // 4. Pre-bundled fallback if available
+        // 5. Pre-bundled fallback if available
         prebundledChapters[key]?.let { return@withContext it }
 
         emptyMap()
