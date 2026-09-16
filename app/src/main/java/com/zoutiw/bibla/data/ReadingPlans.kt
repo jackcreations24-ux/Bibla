@@ -5,13 +5,24 @@ data class ReadingPassage(
     val startChapter: Int,
     val endChapter: Int = startChapter,
     val displayReference: String = if (startChapter == endChapter) "$book $startChapter" else "$book $startChapter-$endChapter"
-)
+) {
+    fun getDisplayReference(language: String): String {
+        val bName = com.zoutiw.bibla.ui.util.BibleBookNames.getDisplayName(book, language)
+        return if (startChapter == endChapter) "$bName $startChapter" else "$bName $startChapter-$endChapter"
+    }
+}
 
 data class ReadingPlanDay(
     val dayNumber: Int,
     val title: String,
     val passages: List<ReadingPassage>
-)
+) {
+    fun getTitle(language: String): String {
+        val prefix = if (language == "fr") "Jour $dayNumber" else "Jou $dayNumber"
+        val passText = passages.joinToString(", ") { it.getDisplayReference(language) }
+        return "$prefix: $passText"
+    }
+}
 
 data class ReadingPlan(
     val id: String,
@@ -23,8 +34,17 @@ data class ReadingPlan(
     val iconName: String,
     val colorPrimaryHex: Long,
     val colorSecondaryHex: Long,
-    val days: List<ReadingPlanDay>
-)
+    val days: List<ReadingPlanDay>,
+    val titleFr: String? = null,
+    val subtitleFr: String? = null,
+    val descriptionFr: String? = null,
+    val categoryFr: String? = null
+) {
+    fun getTitle(language: String): String = if (language == "fr" && !titleFr.isNullOrBlank()) titleFr else title
+    fun getSubtitle(language: String): String = if (language == "fr" && !subtitleFr.isNullOrBlank()) subtitleFr else subtitle
+    fun getDescription(language: String): String = if (language == "fr" && !descriptionFr.isNullOrBlank()) descriptionFr else description
+    fun getCategory(language: String): String = if (language == "fr" && !categoryFr.isNullOrBlank()) categoryFr else category
+}
 
 object ReadingPlanRepository {
 
@@ -113,7 +133,11 @@ object ReadingPlanRepository {
             iconName = "Book",
             colorPrimaryHex = 0xFF10B981, // Emerald
             colorSecondaryHex = 0xFF059669,
-            days = days
+            days = days,
+            titleFr = "Toute la Bible en 1 An",
+            subtitleFr = "365 Jours • Ancien et Nouveau Testament",
+            descriptionFr = "Lisez toute la Bible en une année avec une lecture quotidienne équilibrée de l'Ancien et du Nouveau Testament.",
+            categoryFr = "Complète"
         )
     }
 
@@ -170,7 +194,11 @@ object ReadingPlanRepository {
             iconName = "MenuBook",
             colorPrimaryHex = 0xFF3B82F6, // Blue
             colorSecondaryHex = 0xFF1D4ED8,
-            days = days
+            days = days,
+            titleFr = "Nouveau Testament en 90 Jours",
+            subtitleFr = "90 Jours • De Matthieu à l'Apocalypse",
+            descriptionFr = "Découvrez la vie de Jésus, l'histoire de l'Église primitive et les épîtres apostoliques en 3 mois seulement.",
+            categoryFr = "Nouveau Testament"
         )
     }
 
@@ -198,7 +226,11 @@ object ReadingPlanRepository {
             iconName = "Favorite",
             colorPrimaryHex = 0xFF8B5CF6, // Purple
             colorSecondaryHex = 0xFF6D28D9,
-            days = days
+            days = days,
+            titleFr = "Psaumes et Proverbes en 30 Jours",
+            subtitleFr = "30 Jours • Prière, Louange et Sagesse",
+            descriptionFr = "Nourrissez votre âme chaque jour avec 5 psaumes pour la prière et 1 chapitre de Proverbes pour la sagesse.",
+            categoryFr = "Sagesse & Louange"
         )
     }
 
@@ -245,7 +277,11 @@ object ReadingPlanRepository {
             iconName = "WbSunny",
             colorPrimaryHex = 0xFFF59E0B, // Amber
             colorSecondaryHex = 0xFFD97706,
-            days = days
+            days = days,
+            titleFr = "Les 4 Évangiles en 30 Jours",
+            subtitleFr = "30 Jours • Vie et Enseignements de Jésus",
+            descriptionFr = "Fixez vos regards sur Jésus-Christ à travers la lecture des évangiles de Matthieu, Marc, Luc et Jean en un mois.",
+            categoryFr = "Évangiles"
         )
     }
 
@@ -278,7 +314,11 @@ object ReadingPlanRepository {
             iconName = "Shield",
             colorPrimaryHex = 0xFFEC4899, // Pink
             colorSecondaryHex = 0xFFDB2777,
-            days = curatedDays
+            days = curatedDays,
+            titleFr = "Foi et Espérance en 14 Jours",
+            subtitleFr = "14 Jours • Courage, Paix et Force Spirituelle",
+            descriptionFr = "Fortifiez votre foi et trouvez la paix en toute circonstance avec les versets et chapitres les plus encourageants de la Bible.",
+            categoryFr = "Croissance"
         )
     }
 }

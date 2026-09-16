@@ -293,6 +293,7 @@ fun ReaderScreen(
             textSizeMultiplier = textSizeMultiplier,
             fontFamilyType = fontFamilyType,
             isDarkTheme = isDarkTheme,
+            appLanguage = appLanguage,
             onSetSize = { viewModel.setTextSizeMultiplier(it) },
             onSetFontFamily = { viewModel.setFontFamilyType(it) },
             onDismiss = { showFontSizeSheet = false }
@@ -565,6 +566,7 @@ private fun FontSizeSelectionSheet(
     textSizeMultiplier: Float,
     fontFamilyType: String,
     isDarkTheme: Boolean,
+    appLanguage: String = "ht",
     onSetSize: (Float) -> Unit,
     onSetFontFamily: (String) -> Unit,
     onDismiss: () -> Unit
@@ -572,15 +574,27 @@ private fun FontSizeSelectionSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val bibleFont = getBibleFontFamily(fontFamilyType)
 
-    val fontPresets = listOf(
-        0.8f to "80% (Ti)",
-        1.0f to "100% (Nòmal)",
-        1.2f to "120% (Mwayen)",
-        1.4f to "140% (Gwo)",
-        1.6f to "160% (Trè Gwo)",
-        1.8f to "180% (Pli Gwo)",
-        2.0f to "200% (Maks)"
-    )
+    val fontPresets = if (appLanguage == "fr") {
+        listOf(
+            0.8f to "80% (Petit)",
+            1.0f to "100% (Normal)",
+            1.2f to "120% (Moyen)",
+            1.4f to "140% (Grand)",
+            1.6f to "160% (Très Grand)",
+            1.8f to "180% (Plus Grand)",
+            2.0f to "200% (Max)"
+        )
+    } else {
+        listOf(
+            0.8f to "80% (Ti)",
+            1.0f to "100% (Nòmal)",
+            1.2f to "120% (Mwayen)",
+            1.4f to "140% (Gwo)",
+            1.6f to "160% (Trè Gwo)",
+            1.8f to "180% (Pli Gwo)",
+            2.0f to "200% (Maks)"
+        )
+    }
 
     val fontStyleOptions = listOf(
         Triple("sans_serif", "Sans-Serif", FontFamily.SansSerif),
@@ -616,7 +630,7 @@ private fun FontSizeSelectionSheet(
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
-                        text = "Fòma ak Font Tèks Bib la",
+                        text = if (appLanguage == "fr") "Format et Police du Texte" else "Fòma ak Font Tèks Bib la",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -626,7 +640,7 @@ private fun FontSizeSelectionSheet(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Fèmen",
+                        contentDescription = if (appLanguage == "fr") "Fermer" else "Fèmen",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -645,14 +659,18 @@ private fun FontSizeSelectionSheet(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Apèsi (Preview):",
+                        text = if (appLanguage == "fr") "Aperçu (Jean 3:16) :" else "Apèsi (Jan 3:16) :",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Paske Bondye sitèlman renmen lèzòm, li bay sèl Pitit li a pou yo, pou tout moun ki kwè nan li pa peri, men pou yo gen lavi ki p'ap janm fini an.",
+                        text = if (appLanguage == "fr") {
+                            "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle."
+                        } else {
+                            "Paske Bondye sitèlman renmen lèzòm, li bay sèl Pitit li a pou yo, pou tout moun ki kwè nan li pa peri, men pou yo gen lavi ki p'ap janm fini an."
+                        },
                         fontFamily = bibleFont,
                         fontSize = (16 * textSizeMultiplier).sp,
                         lineHeight = (26 * textSizeMultiplier).sp,
@@ -676,7 +694,7 @@ private fun FontSizeSelectionSheet(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Style Font (Tipografi):",
+                    text = if (appLanguage == "fr") "Style de Police (Typographie) :" else "Style Font (Tipografi):",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -722,7 +740,7 @@ private fun FontSizeSelectionSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Gwosè Tèks kounye a:",
+                    text = if (appLanguage == "fr") "Taille du Texte actuelle :" else "Gwosè Tèks kounye a:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -746,7 +764,7 @@ private fun FontSizeSelectionSheet(
                 ) {
                     Icon(
                         Icons.Default.Remove,
-                        contentDescription = "Diminye",
+                        contentDescription = if (appLanguage == "fr") "Diminuer" else "Diminye",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -769,7 +787,7 @@ private fun FontSizeSelectionSheet(
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Ogmante",
+                        contentDescription = if (appLanguage == "fr") "Augmenter" else "Ogmante",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }

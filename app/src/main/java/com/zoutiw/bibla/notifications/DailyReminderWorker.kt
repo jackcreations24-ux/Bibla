@@ -174,22 +174,33 @@ class DailyReminderWorker(context: Context, params: WorkerParameters) : Coroutin
             val channelId = "daily_reading_reminder"
             val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+            val prefs = applicationContext.getSharedPreferences("user_settings_prefs", Context.MODE_PRIVATE)
+            val appLang = prefs.getString("pref_app_language", "ht") ?: "ht"
+            val channelName = if (appLang == "fr") "La Bible - Rappel de Lecture" else "Bib la - Rapèl Lekti"
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(channelId, "Bib la - Rapèl Lekti", NotificationManager.IMPORTANCE_HIGH)
+                val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
                 notificationManager.createNotificationChannel(channel)
             }
 
-            val prefs = applicationContext.getSharedPreferences("user_settings_prefs", Context.MODE_PRIVATE)
             val activePlanId = prefs.getString("pref_active_reading_plan", "full_bible_365") ?: "full_bible_365"
             val plan = com.zoutiw.bibla.data.ReadingPlanRepository.getPlanById(activePlanId)
             val completedDays = prefs.getStringSet("pref_plan_completed_$activePlanId", emptySet())
                 ?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet()
             val nextDayNum = (1..plan.totalDays).firstOrNull { !completedDays.contains(it) } ?: 1
             val dayPlan = plan.days.getOrNull(nextDayNum - 1)
-            val passageText = dayPlan?.passages?.joinToString(", ") { it.displayReference } ?: "Lekti jodi a"
+            val planTitle = plan.getTitle(appLang)
+            val dayLabel = if (appLang == "fr") "Jour" else "Jou"
+            val defaultPassage = if (appLang == "fr") "Lecture d'aujourd'hui" else "Lekti jodi a"
+            val passageText = dayPlan?.passages?.joinToString(", ") { it.getDisplayReference(appLang) } ?: defaultPassage
 
-            val title = "Bib La • Rapèl Lekti"
-            val message = "${plan.title} (Jou $nextDayNum): $passageText"
+            val title = if (appLang == "fr") "La Sainte Bible • Rappel de Lecture" else "Bib La • Rapèl Lekti"
+            val message = "$planTitle ($dayLabel $nextDayNum): $passageText"
+            val bigText = if (appLang == "fr") {
+                "$message\nCliquez ici pour lire le passage d'aujourd'hui et enregistrer vos progrès !"
+            } else {
+                "$message\nKlike la a pou w li pasaj jodi a epi make pwogrè ou!"
+            }
 
             val intent = Intent(applicationContext, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -213,7 +224,7 @@ class DailyReminderWorker(context: Context, params: WorkerParameters) : Coroutin
                 .setSmallIcon(R.drawable.ic_notification_bib_la)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setStyle(NotificationCompat.BigTextStyle().bigText("$message\nKlike la a pou w li pasaj jodi a epi make pwogrè ou!"))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setContentIntent(pendingIntent)
@@ -239,16 +250,20 @@ class DailyReminderWorker(context: Context, params: WorkerParameters) : Coroutin
     private suspend fun saveNotificationToDb() {
         try {
             val prefs = applicationContext.getSharedPreferences("user_settings_prefs", Context.MODE_PRIVATE)
+            val appLang = prefs.getString("pref_app_language", "ht") ?: "ht"
             val activePlanId = prefs.getString("pref_active_reading_plan", "full_bible_365") ?: "full_bible_365"
             val plan = com.zoutiw.bibla.data.ReadingPlanRepository.getPlanById(activePlanId)
             val completedDays = prefs.getStringSet("pref_plan_completed_$activePlanId", emptySet())
                 ?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet()
             val nextDayNum = (1..plan.totalDays).firstOrNull { !completedDays.contains(it) } ?: 1
             val dayPlan = plan.days.getOrNull(nextDayNum - 1)
-            val passageText = dayPlan?.passages?.joinToString(", ") { it.displayReference } ?: "Lekti jodi a"
+            val planTitle = plan.getTitle(appLang)
+            val dayLabel = if (appLang == "fr") "Jour" else "Jou"
+            val defaultPassage = if (appLang == "fr") "Lecture d'aujourd'hui" else "Lekti jodi a"
+            val passageText = dayPlan?.passages?.joinToString(", ") { it.getDisplayReference(appLang) } ?: defaultPassage
 
-            val title = "Bib La • Rapèl Lekti"
-            val message = "${plan.title} (Jou $nextDayNum): $passageText"
+            val title = if (appLang == "fr") "La Sainte Bible • Rappel de Lecture" else "Bib La • Rapèl Lekti"
+            val message = "$planTitle ($dayLabel $nextDayNum): $passageText"
 
             val db = Room.databaseBuilder(
                 applicationContext,

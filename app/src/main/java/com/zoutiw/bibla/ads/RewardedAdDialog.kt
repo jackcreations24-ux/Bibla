@@ -34,6 +34,7 @@ import kotlinx.coroutines.delay
 fun RewardedAdDialog(
     adManager: AdManager,
     isDarkTheme: Boolean,
+    language: String = "ht",
     onDismiss: () -> Unit,
     onRewardEarned: () -> Unit
 ) {
@@ -63,7 +64,8 @@ fun RewardedAdDialog(
                                 isSimulatingAd = false
                                 adManager.addReward()
                                 adManager.incrementImpression()
-                                Toast.makeText(context, "Felisitasyon! Rekonpans debloke a siksè!", Toast.LENGTH_SHORT).show()
+                                val toastMsg = if (language == "fr") "Félicitations ! Récompense débloquée avec succès !" else "Felisitasyon! Rekonpans debloke a siksè!"
+                                Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                 onRewardEarned()
                                 onDismiss()
                             }
@@ -91,7 +93,8 @@ fun RewardedAdDialog(
                 isSimulatingAd = false
                 adManager.addReward()
                 adManager.incrementImpression()
-                Toast.makeText(context, "Felisitasyon! Ou debloke fonksyon avanse a siksè!", Toast.LENGTH_LONG).show()
+                val toastMsg = if (language == "fr") "Félicitations ! Fonctionnalité avancée débloquée avec succès !" else "Felisitasyon! Ou debloke fonksyon avanse a siksè!"
+                Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show()
                 onRewardEarned()
                 onDismiss()
             }
@@ -119,7 +122,7 @@ fun RewardedAdDialog(
                         onClick = onDismiss,
                         modifier = Modifier.size(32.dp)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Fèmen")
+                        Icon(Icons.Default.Close, contentDescription = if (language == "fr") "Fermer" else "Fèmen")
                     }
                 }
 
@@ -141,7 +144,7 @@ fun RewardedAdDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Videyo Reklam (15s)",
+                    text = if (language == "fr") "Vidéo Publicitaire (15s)" else "Videyo Reklam (15s)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -150,7 +153,11 @@ fun RewardedAdDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Videyo anons lan ap jwe pou w ka jwenn rekonpans epi debloke fonksyon avanse yo!",
+                    text = if (language == "fr") {
+                        "La vidéo publicitaire est en cours de lecture pour débloquer votre récompense et les fonctionnalités avancées !"
+                    } else {
+                        "Videyo anons lan ap jwe pou w ka jwenn rekonpans epi debloke fonksyon avanse yo!"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -176,14 +183,14 @@ fun RewardedAdDialog(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(
-                        text = "Ap jwe... $simulationSecondsLeft segonn ki rete",
+                        text = if (language == "fr") "Lecture en cours... $simulationSecondsLeft secondes restantes" else "Ap jwe... $simulationSecondsLeft segonn ki rete",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF10B981)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Mèsi paske w ap sipòte travay Levanjil Bib La!",
+                        text = if (language == "fr") "Merci de soutenir la mission de La Sainte Bible !" else "Mèsi paske w ap sipòte travay Levanjil Bib La!",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

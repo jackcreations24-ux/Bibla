@@ -244,7 +244,7 @@ fun ReadingPlansScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 Text(
-                                    text = plan.title,
+                                    text = plan.getTitle(appLanguage),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -252,7 +252,7 @@ fun ReadingPlansScreen(
                                 )
 
                                 Text(
-                                    text = if (appLanguage == "fr") "${plan.totalDays} Jours • ${plan.category}" else "${plan.totalDays} Jou • ${plan.category}",
+                                    text = if (appLanguage == "fr") "${plan.totalDays} Jours • ${plan.getCategory(appLanguage)}" else "${plan.totalDays} Jou • ${plan.getCategory(appLanguage)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -303,12 +303,12 @@ fun ReadingPlansScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = currentPlan.title,
+                                    text = currentPlan.getTitle(appLanguage),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.ExtraBold
                                 )
                                 Text(
-                                    text = currentPlan.subtitle,
+                                    text = currentPlan.getSubtitle(appLanguage),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -318,7 +318,7 @@ fun ReadingPlansScreen(
                                 NeumorphicButton(
                                     onClick = {
                                         viewModel.setActiveReadingPlan(selectedPlanId)
-                                        val toastMsg = if (appLanguage == "fr") "${currentPlan.title} défini comme votre plan actif !" else "${currentPlan.title} defini kòm plan prensipal ou!"
+                                        val toastMsg = if (appLanguage == "fr") "${currentPlan.getTitle(appLanguage)} défini comme votre plan actif !" else "${currentPlan.getTitle(appLanguage)} defini kòm plan prensipal ou!"
                                         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                     },
                                     cornerRadius = 12.dp,
@@ -339,7 +339,7 @@ fun ReadingPlansScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = currentPlan.description,
+                            text = currentPlan.getDescription(appLanguage),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -447,7 +447,7 @@ fun ReadingPlansScreen(
                                                     )
                                                     Spacer(modifier = Modifier.width(6.dp))
                                                     Text(
-                                                        text = passage.displayReference,
+                                                        text = passage.getDisplayReference(appLanguage),
                                                         style = MaterialTheme.typography.bodySmall,
                                                         fontWeight = FontWeight.Bold,
                                                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -592,6 +592,7 @@ fun ReadingPlansScreen(
             currentEnabled = reminderEnabled,
             currentHour = reminderHour,
             currentMinute = reminderMinute,
+            language = appLanguage,
             onSave = { enabled, hour, minute ->
                 viewModel.setReadingPlanReminder(enabled, hour, minute)
                 showReminderDialog = false
@@ -700,7 +701,7 @@ private fun DayReadingItemCard(
                             modifier = Modifier.clickable { onPassageClick(passage) }
                         ) {
                             Text(
-                                text = passage.displayReference,
+                                text = passage.getDisplayReference(appLanguage),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,

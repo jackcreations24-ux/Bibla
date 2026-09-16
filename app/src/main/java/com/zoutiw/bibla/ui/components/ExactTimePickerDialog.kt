@@ -25,6 +25,7 @@ fun ExactTimePickerDialog(
     currentEnabled: Boolean,
     currentHour: Int,
     currentMinute: Int,
+    language: String = "ht",
     onSave: (Boolean, Int, Int) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -48,14 +49,25 @@ fun ExactTimePickerDialog(
         String.format("%02d:%02d %s", h, selectedMinute, amPm)
     }
 
-    val presetTimes = listOf(
-        Triple("06:00 AM", "Bonè", 6 to 0),
-        Triple("07:30 AM", "Maten", 7 to 30),
-        Triple("12:00 PM", "Midi", 12 to 0),
-        Triple("06:30 PM", "Aswè", 18 to 30),
-        Triple("08:00 PM", "Nwit", 20 to 0),
-        Triple("09:30 PM", "Dòmi", 21 to 30)
-    )
+    val presetTimes = if (language == "fr") {
+        listOf(
+            Triple("06:00 AM", "Tôt", 6 to 0),
+            Triple("07:30 AM", "Matin", 7 to 30),
+            Triple("12:00 PM", "Midi", 12 to 0),
+            Triple("06:30 PM", "Soir", 18 to 30),
+            Triple("08:00 PM", "Nuit", 20 to 0),
+            Triple("09:30 PM", "Coucher", 21 to 30)
+        )
+    } else {
+        listOf(
+            Triple("06:00 AM", "Bonè", 6 to 0),
+            Triple("07:30 AM", "Maten", 7 to 30),
+            Triple("12:00 PM", "Midi", 12 to 0),
+            Triple("06:30 PM", "Aswè", 18 to 30),
+            Triple("08:00 PM", "Nwit", 20 to 0),
+            Triple("09:30 PM", "Dòmi", 21 to 30)
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -80,12 +92,12 @@ fun ExactTimePickerDialog(
                 }
                 Column {
                     Text(
-                        text = "Lè Egzak Pou Rapèl Lekti",
+                        text = if (language == "fr") "Heure de rappel de lecture" else "Lè Egzak Pou Rapèl Lekti",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Konfigirasyon Rapèl Chak Jou",
+                        text = if (language == "fr") "Configuration du rappel quotidien" else "Konfigirasyon Rapèl Chak Jou",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -114,12 +126,16 @@ fun ExactTimePickerDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Aktive Rapèl Otomatik",
+                                text = if (language == "fr") "Activer le rappel automatique" else "Aktive Rapèl Otomatik",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (isEnabled) "Notifikasyon ap voye chak jou" else "Rapèl la dezaktive",
+                                text = if (isEnabled) {
+                                    if (language == "fr") "Notifications envoyées chaque jour" else "Notifikasyon ap voye chak jou"
+                                } else {
+                                    if (language == "fr") "Le rappel est désactivé" else "Rapèl la dezaktive"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -146,7 +162,7 @@ fun ExactTimePickerDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "LÈ W CHWAZI A",
+                                text = if (language == "fr") "HEURE SÉLECTIONNÉE" else "LÈ W CHWAZI A",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -314,7 +330,11 @@ fun ExactTimePickerDialog(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Ajiste minit yo:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        text = if (language == "fr") "Ajuster les minutes :" else "Ajiste minit yo:",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                     Text("$selectedMinute min", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = PrimaryColor)
                                 }
                                 Slider(
@@ -334,7 +354,7 @@ fun ExactTimePickerDialog(
                     // Fast Presets Section
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "LÈ KI POPILÈ (PRESETS RAPID)",
+                            text = if (language == "fr") "HEURES POPULAIRES (PRÉRÉGLAGES RAPIDES)" else "LÈ KI POPILÈ (PRESETS RAPID)",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -401,7 +421,7 @@ fun ExactTimePickerDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Notifikasyon an ap vini chak jou a $formattedTime.",
+                                text = if (language == "fr") "La notification arrivera chaque jour à $formattedTime." else "Notifikasyon an ap vini chak jou a $formattedTime.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF047857),
                                 fontWeight = FontWeight.Medium
@@ -416,12 +436,12 @@ fun ExactTimePickerDialog(
                 onClick = { onSave(isEnabled, selectedHour24, selectedMinute) },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
             ) {
-                Text("Anrejistre Lè a", fontWeight = FontWeight.Bold)
+                Text(if (language == "fr") "Enregistrer l'heure" else "Anrejistre Lè a", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Anile")
+                Text(if (language == "fr") "Annuler" else "Anile")
             }
         }
     )

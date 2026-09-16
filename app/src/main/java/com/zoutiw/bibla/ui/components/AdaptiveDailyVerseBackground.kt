@@ -78,6 +78,28 @@ enum class VerseSpiritualTheme(
         iconEmoji = "🌅"
     );
 
+    fun getTitle(language: String): String = if (language == "fr") {
+        when (this) {
+            PEACE_AND_COMFORT -> "Paix & Consolation"
+            FAITH_AND_STRENGTH -> "Foi & Victoire"
+            PRAISE_AND_JOY -> "Louange & Reconnaissance"
+            LOVE_AND_GRACE -> "Amour & Grâce Divine"
+            CREATION_AND_WISDOM -> "Sagesse & Lumière"
+            HOPE_AND_DAWN -> "Espérance & Aube Nouvelle"
+        }
+    } else title
+
+    fun getBadgeLabel(language: String): String = if (language == "fr") {
+        when (this) {
+            PEACE_AND_COMFORT -> "Paix & Sérénité"
+            FAITH_AND_STRENGTH -> "Foi & Force"
+            PRAISE_AND_JOY -> "Louange & Gloire"
+            LOVE_AND_GRACE -> "Amour & Grâce"
+            CREATION_AND_WISDOM -> "Sagesse & Lumière"
+            HOPE_AND_DAWN -> "Espérance & Promesse"
+        }
+    } else badgeLabel
+
     companion object {
         fun detectTheme(verse: Verse?): VerseSpiritualTheme {
             if (verse == null) return HOPE_AND_DAWN
@@ -85,30 +107,42 @@ enum class VerseSpiritualTheme(
             val book = verse.book.lowercase()
 
             return when {
-                // Love & Grace
+                // Love & Grace (Kreyòl & Français)
                 text.contains("renmen") || text.contains("lanmou") || text.contains("gras") ||
                 text.contains("kè sansib") || text.contains("pitye") || text.contains("renmen nou") ||
-                book.contains("jan") || text.contains("pitit li a") -> LOVE_AND_GRACE
+                text.contains("amour") || text.contains("grâce") || text.contains("miséricorde") ||
+                text.contains("compassion") || text.contains("charité") ||
+                book.contains("jan") || book.contains("jean") || text.contains("pitit li a") || text.contains("son fils") -> LOVE_AND_GRACE
 
-                // Praise & Joy
+                // Praise & Joy (Kreyòl & Français)
                 text.contains("louwe") || text.contains("chante") || text.contains("lwanj") ||
                 text.contains("beni") || text.contains("kè kontan") || text.contains("glwa") ||
+                text.contains("loue") || text.contains("louange") || text.contains("célébre") ||
+                text.contains("béni") || text.contains("joie") || text.contains("gloire") || text.contains("alléluia") ||
                 book.contains("sòm") || book.contains("psaume") -> PRAISE_AND_JOY
 
-                // Faith & Victory & Strength
+                // Faith & Victory & Strength (Kreyòl & Français)
                 text.contains("fòs") || text.contains("pouvwa") || text.contains("viktwa") ||
                 text.contains("konba") || text.contains("boukliye") || text.contains("lafwa") ||
-                text.contains("pa pè") || text.contains("vanyan") || text.contains("konfyans") -> FAITH_AND_STRENGTH
+                text.contains("pa pè") || text.contains("vanyan") || text.contains("konfyans") ||
+                text.contains("force") || text.contains("puissance") || text.contains("victoire") ||
+                text.contains("combat") || text.contains("bouclier") || text.contains("foi") ||
+                text.contains("courage") || text.contains("confiance") || text.contains("vaillant") -> FAITH_AND_STRENGTH
 
-                // Peace & Comfort
+                // Peace & Comfort (Kreyòl & Français)
                 text.contains("lapè") || text.contains("repo") || text.contains("trankil") ||
                 text.contains("konsolasyon") || text.contains("kè poze") || text.contains("gadò") ||
-                text.contains("dlo fre") || text.contains("pa gen krentif") -> PEACE_AND_COMFORT
+                text.contains("dlo fre") || text.contains("pa gen krentif") ||
+                text.contains("paix") || text.contains("repos") || text.contains("tranquille") ||
+                text.contains("tranquillité") || text.contains("consolation") || text.contains("berger") ||
+                text.contains("eaux paisibles") || text.contains("ne crains") -> PEACE_AND_COMFORT
 
-                // Wisdom & Guidance
+                // Wisdom & Guidance (Kreyòl & Français)
                 text.contains("sajès") || text.contains("limyè") || text.contains("chemen") ||
                 text.contains("pawòl") || text.contains("konesans") || text.contains("kreyatè") ||
-                book.contains("pwovèb") || book.contains("jak") -> CREATION_AND_WISDOM
+                text.contains("sagesse") || text.contains("lumière") || text.contains("chemin") ||
+                text.contains("parole") || text.contains("connaissance") || text.contains("créateur") ||
+                book.contains("pwovèb") || book.contains("proverbe") || book.contains("jak") || book.contains("jacques") -> CREATION_AND_WISDOM
 
                 // Default Hope
                 else -> HOPE_AND_DAWN

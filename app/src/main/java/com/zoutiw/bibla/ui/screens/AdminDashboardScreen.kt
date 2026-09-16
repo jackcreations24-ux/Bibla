@@ -40,6 +40,7 @@ fun AdminDashboardScreen(
     val systemInDarkTheme = isSystemInDarkTheme()
     val isDarkModePreference by viewModel.isDarkMode.collectAsState()
     val isDarkTheme = isDarkModePreference ?: systemInDarkTheme
+    val appLanguage by viewModel.appLanguage.collectAsState()
 
     val adminPin by adManager.adminPin.collectAsState()
     var enteredPin by remember { mutableStateOf("") }
@@ -93,9 +94,11 @@ fun AdminDashboardScreen(
         RewardedAdDialog(
             adManager = adManager,
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showTestRewardedDialog = false },
             onRewardEarned = {
-                Toast.makeText(context, "Test Rewarded Ad konplete ak siksè!", Toast.LENGTH_SHORT).show()
+                val msg = if (appLanguage == "fr") "Test d'annonce avec récompense réussi !" else "Test Rewarded Ad konplete ak siksè!"
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -112,14 +115,17 @@ fun AdminDashboardScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Admin Dashboard • AdMob",
+                            if (appLanguage == "fr") "Tableau de Bord Admin • AdMob" else "Admin Dashboard • AdMob",
                             fontWeight = FontWeight.Bold
                         )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retounen")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = if (appLanguage == "fr") "Retour" else "Retounen"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -167,13 +173,13 @@ fun AdminDashboardScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Aksè Sekrè Admin",
+                            text = if (appLanguage == "fr") "Accès Secret Administrateur" else "Aksè Sekrè Admin",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
 
                         Text(
-                            text = "Antre kòd PIN pou jere anons AdMob yo.",
+                            text = if (appLanguage == "fr") "Entrez le code PIN pour gérer les annonces AdMob." else "Antre kòd PIN pou jere anons AdMob yo.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
@@ -182,7 +188,7 @@ fun AdminDashboardScreen(
                         OutlinedTextField(
                             value = enteredPin,
                             onValueChange = { enteredPin = it },
-                            label = { Text("Kòd PIN Admin") },
+                            label = { Text(if (appLanguage == "fr") "Code PIN Admin" else "Kòd PIN Admin") },
                             placeholder = { Text("1234") },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
@@ -197,7 +203,8 @@ fun AdminDashboardScreen(
                                 if (enteredPin == adminPin) {
                                     isAuthenticated = true
                                 } else {
-                                    Toast.makeText(context, "Kòd PIN enkòrèk!", Toast.LENGTH_SHORT).show()
+                                    val err = if (appLanguage == "fr") "Code PIN incorrect !" else "Kòd PIN enkòrèk!"
+                                    Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             cornerRadius = 16.dp,
@@ -207,7 +214,7 @@ fun AdminDashboardScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "OUVRI DASHBOARD",
+                                text = if (appLanguage == "fr") "OUVRIR LE DASHBOARD" else "OUVRI DASHBOARD",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -238,7 +245,7 @@ fun AdminDashboardScreen(
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                text = "STATUT ADMOB KOUNYE A",
+                                text = if (appLanguage == "fr") "STATUT ADMOB ACTUEL" else "STATUT ADMOB KOUNYE A",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF10B981)
@@ -253,12 +260,20 @@ fun AdminDashboardScreen(
                             ) {
                                 Column {
                                     Text(
-                                        text = "Anons Aktif: ${if (adsEnabled && !isPremiumUser) "WI" else "NON"}",
+                                        text = if (appLanguage == "fr") {
+                                            "Annonces actives : ${if (adsEnabled && !isPremiumUser) "OUI" else "NON"}"
+                                        } else {
+                                            "Anons Aktif: ${if (adsEnabled && !isPremiumUser) "WI" else "NON"}"
+                                        },
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Mòd: ${if (isTestMode) "Test (Google Test IDs)" else "Pwodiksyon"}",
+                                        text = if (appLanguage == "fr") {
+                                            "Mode : ${if (isTestMode) "Test (ID Test Google)" else "Production"}"
+                                        } else {
+                                            "Mòd: ${if (isTestMode) "Test (Google Test IDs)" else "Pwodiksyon"}"
+                                        },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -269,7 +284,7 @@ fun AdminDashboardScreen(
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Text(
-                                        text = "$impressions Afichaj",
+                                        text = "$impressions ${if (appLanguage == "fr") "Affichages" else "Afichaj"}",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -284,7 +299,7 @@ fun AdminDashboardScreen(
                 // Global Ad Switches
                 item {
                     Text(
-                        text = "KONFIGIRASYON PWENKIPAY",
+                        text = if (appLanguage == "fr") "CONFIGURATION PRINCIPALE" else "KONFIGIRASYON PWENKIPAY",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -301,8 +316,8 @@ fun AdminDashboardScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             // Global Ads Switch
                             AdminSwitchRow(
-                                title = "Aktive Tout Anons AdMob",
-                                subtitle = "Limen oswa koupe anons sou tout app la",
+                                title = if (appLanguage == "fr") "Activer Toutes les Annonces AdMob" else "Aktive Tout Anons AdMob",
+                                subtitle = if (appLanguage == "fr") "Activer ou désactiver les annonces sur toute l'application" else "Limen oswa koupe anons sou tout app la",
                                 checked = adsEnabled,
                                 onCheckedChange = { adManager.setAdsEnabled(it) }
                             )
@@ -311,8 +326,8 @@ fun AdminDashboardScreen(
 
                             // Banner Ads Switch
                             AdminSwitchRow(
-                                title = "Anons Bò Anba (Bottom Banner)",
-                                subtitle = "Afiche reklam anba section 'Tèm jodi a'",
+                                title = if (appLanguage == "fr") "Bannière Publicitaire Inférieure (Bottom Banner)" else "Anons Bò Anba (Bottom Banner)",
+                                subtitle = if (appLanguage == "fr") "Afficher une annonce en dessous de la section 'Thème du jour'" else "Afiche reklam anba section 'Tèm jodi a'",
                                 checked = bannerAdsEnabled,
                                 onCheckedChange = { adManager.setBannerAdsEnabled(it) }
                             )
@@ -321,8 +336,8 @@ fun AdminDashboardScreen(
 
                             // Rewarded Ads Switch
                             AdminSwitchRow(
-                                title = "Anons ak Rekonpans (Rewarded Ads)",
-                                subtitle = "Permèt itilizatè gade videyo 15s pou debloke sipleman",
+                                title = if (appLanguage == "fr") "Annonces avec Récompense (Rewarded Ads)" else "Anons ak Rekonpans (Rewarded Ads)",
+                                subtitle = if (appLanguage == "fr") "Permettre aux utilisateurs de regarder 15s de vidéo pour des récompenses" else "Permèt itilizatè gade videyo 15s pou debloke sipleman",
                                 checked = rewardedAdsEnabled,
                                 onCheckedChange = { adManager.setRewardedAdsEnabled(it) }
                             )
@@ -331,8 +346,8 @@ fun AdminDashboardScreen(
 
                             // Test Mode Toggle
                             AdminSwitchRow(
-                                title = "Mòd Test AdMob",
-                                subtitle = "Sèvi ak ID test ofisyèl Google yo (sere pou evite blòk)",
+                                title = if (appLanguage == "fr") "Mode Test AdMob" else "Mòd Test AdMob",
+                                subtitle = if (appLanguage == "fr") "Utiliser les identifiants officiels de test Google (sécurisé)" else "Sèvi ak ID test ofisyèl Google yo (sere pou evite blòk)",
                                 checked = isTestMode,
                                 onCheckedChange = { adManager.setTestMode(it) }
                             )
@@ -341,8 +356,8 @@ fun AdminDashboardScreen(
 
                             // Force Premium Mode
                             AdminSwitchRow(
-                                title = "Simule Bib Premium ($2.99)",
-                                subtitle = "Retire tout anons tankou yon moun ki fin peye",
+                                title = if (appLanguage == "fr") "Simuler Mode Premium ($2.99)" else "Simule Bib Premium ($2.99)",
+                                subtitle = if (appLanguage == "fr") "Supprime toutes les annonces comme un utilisateur ayant payé" else "Retire tout anons tankou yon moun ki fin peye",
                                 checked = isPremiumUser,
                                 onCheckedChange = { adManager.setPremiumUser(it) }
                             )
@@ -353,7 +368,7 @@ fun AdminDashboardScreen(
                 // Ad Unit IDs Configuration
                 item {
                     Text(
-                        text = "ID ADMOB KOUTIM (PRODUCTION)",
+                        text = if (appLanguage == "fr") "IDENTIFIANTS ADMOB PERSONNALISÉS (PRODUCTION)" else "ID ADMOB KOUTIM (PRODUCTION)",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -400,7 +415,8 @@ fun AdminDashboardScreen(
                                     adManager.setAppId(editableAppId)
                                     adManager.setCustomBannerAdUnitId(editableBannerId)
                                     adManager.setCustomRewardedAdUnitId(editableRewardedId)
-                                    Toast.makeText(context, "ID AdMob yo anregistre!", Toast.LENGTH_SHORT).show()
+                                    val toastMsg = if (appLanguage == "fr") "Identifiants AdMob enregistrés !" else "ID AdMob yo anregistre!"
+                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                 },
                                 cornerRadius = 12.dp,
                                 elevation = 4.dp,
@@ -409,7 +425,7 @@ fun AdminDashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "ANREGISTRE ID YON",
+                                    text = if (appLanguage == "fr") "ENREGISTRER LES IDENTIFIANTS" else "ANREGISTRE ID YO",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
@@ -423,7 +439,7 @@ fun AdminDashboardScreen(
                 // Donation Addresses Configuration
                 item {
                     Text(
-                        text = "JESYON ADRES DONASYON YO",
+                        text = if (appLanguage == "fr") "GESTION DES ADRESSES DE DONS" else "JESYON ADRES DONASYON YO",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -470,7 +486,8 @@ fun AdminDashboardScreen(
                                     adManager.setPaypalAddress(editablePaypal)
                                     adManager.setWiseAddress(editableWise)
                                     adManager.setBinanceId(editableBinance)
-                                    Toast.makeText(context, "Adres donasyon yo mete ajou!", Toast.LENGTH_SHORT).show()
+                                    val toastMsg = if (appLanguage == "fr") "Adresses de dons mises à jour !" else "Adres donasyon yo mete ajou!"
+                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                 },
                                 cornerRadius = 12.dp,
                                 elevation = 4.dp,
@@ -479,7 +496,7 @@ fun AdminDashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "ANREGISTRE ADRES DONASYON YO",
+                                    text = if (appLanguage == "fr") "ENREGISTRER LES ADRESSES DE DONS" else "ANREGISTRE ADRES DONASYON YO",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
@@ -493,7 +510,7 @@ fun AdminDashboardScreen(
                 // Social Media, Play Store & Legal URL Management
                 item {
                     Text(
-                        text = "JESYON LYEN REZO SOSYO, PLAY STORE & SIPÒ",
+                        text = if (appLanguage == "fr") "GESTION DES RÉSEAUX SOCIAUX, PLAY STORE & SUPPORT" else "JESYON LYEN REZO SOSYO, PLAY STORE & SIPÒ",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -514,7 +531,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editablePlayStorePackage,
                                 onValueChange = { editablePlayStorePackage = it },
-                                label = { Text("Package ID Play Store (pou 'Rate Us')") },
+                                label = { Text(if (appLanguage == "fr") "ID de Package Play Store (pour 'Noter')" else "Package ID Play Store (pou 'Rate Us')") },
                                 placeholder = { Text("com.zoutiw.bibla") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -523,7 +540,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editableYoutube,
                                 onValueChange = { editableYoutube = it },
-                                label = { Text("Lyen YouTube Ofisyèl") },
+                                label = { Text(if (appLanguage == "fr") "Lien YouTube Officiel" else "Lyen YouTube Ofisyèl") },
                                 placeholder = { Text("https://youtube.com/@bibla") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -532,7 +549,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editableFacebook,
                                 onValueChange = { editableFacebook = it },
-                                label = { Text("Lyen Facebook Ofisyèl") },
+                                label = { Text(if (appLanguage == "fr") "Lien Facebook Officiel" else "Lyen Facebook Ofisyèl") },
                                 placeholder = { Text("https://facebook.com/bibla") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -541,7 +558,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editableWhatsapp,
                                 onValueChange = { editableWhatsapp = it },
-                                label = { Text("Lyen WhatsApp Kominote / Sipò") },
+                                label = { Text(if (appLanguage == "fr") "Lien WhatsApp Communauté / Support" else "Lyen WhatsApp Kominote / Sipò") },
                                 placeholder = { Text("https://chat.whatsapp.com/...") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -550,7 +567,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editableSupportEmail,
                                 onValueChange = { editableSupportEmail = it },
-                                label = { Text("Imel Sipò Devlopè") },
+                                label = { Text(if (appLanguage == "fr") "E-mail de Support Développeur" else "Imel Sipò Devlopè") },
                                 placeholder = { Text("jacksonofisyal@gmail.com") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -559,7 +576,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editablePhone,
                                 onValueChange = { editablePhone = it },
-                                label = { Text("Nimewo Kontak Devlopè") },
+                                label = { Text(if (appLanguage == "fr") "Numéro de Contact Développeur" else "Nimewo Kontak Devlopè") },
                                 placeholder = { Text("+18296211349") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -568,7 +585,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = editablePrivacyUrl,
                                 onValueChange = { editablePrivacyUrl = it },
-                                label = { Text("Lyen Sit Wèb Politik Konfidansyalite (Online URL)") },
+                                label = { Text(if (appLanguage == "fr") "Lien Politique de Confidentialité en Ligne" else "Lyen Sit Wèb Politik Konfidansyalite (Online URL)") },
                                 placeholder = { Text("https://sites.google.com/...") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
@@ -583,7 +600,8 @@ fun AdminDashboardScreen(
                                     adManager.setSupportEmail(editableSupportEmail)
                                     adManager.setDeveloperPhone(editablePhone)
                                     adManager.setPrivacyPolicyUrl(editablePrivacyUrl)
-                                    Toast.makeText(context, "Tout lyen rezo sosyo ak sipò yo anregistre!", Toast.LENGTH_SHORT).show()
+                                    val toastMsg = if (appLanguage == "fr") "Tous les liens réseaux et support sont enregistrés !" else "Tout lyen rezo sosyo ak sipò yo anregistre!"
+                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                 },
                                 cornerRadius = 12.dp,
                                 elevation = 4.dp,
@@ -592,7 +610,7 @@ fun AdminDashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "ANREGISTRE TOUT LYEN YO",
+                                    text = if (appLanguage == "fr") "ENREGISTRER TOUS LES LIENS" else "ANREGISTRE TOUT LYEN YO",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
@@ -606,7 +624,7 @@ fun AdminDashboardScreen(
                 // Developer Announcements Section
                 item {
                     Text(
-                        text = "KOMINIKASYON AK ANONS POU ITILIZATÈ YO",
+                        text = if (appLanguage == "fr") "COMMUNICATION ET ANNONCES POUR LES UTILISATEURS" else "KOMINIKASYON AK ANONS POU ITILIZATÈ YO",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -627,8 +645,8 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = announcementTitle,
                                 onValueChange = { announcementTitle = it },
-                                label = { Text("Tòt Anons lan") },
-                                placeholder = { Text("Eg: Anons Ofisyèl Devlopè") },
+                                label = { Text(if (appLanguage == "fr") "Titre de l'annonce" else "Tòt Anons lan") },
+                                placeholder = { Text(if (appLanguage == "fr") "Ex : Annonce Officielle Développeur" else "Eg: Anons Ofisyèl Devlopè") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -636,8 +654,8 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = announcementMessage,
                                 onValueChange = { announcementMessage = it },
-                                label = { Text("Mesaj pou itilizatè yo") },
-                                placeholder = { Text("Ekri mesaj ou vle voye bay tout itilizatè yo la a...") },
+                                label = { Text(if (appLanguage == "fr") "Message pour les utilisateurs" else "Mesaj pou itilizatè yo") },
+                                placeholder = { Text(if (appLanguage == "fr") "Écrivez le message que vous voulez envoyer à tous les utilisateurs ici..." else "Ekri mesaj ou vle voye bay tout itilizatè yo la a...") },
                                 minLines = 3,
                                 maxLines = 5,
                                 modifier = Modifier.fillMaxWidth()
@@ -662,12 +680,16 @@ fun AdminDashboardScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
-                                            text = "Senkronizasyon Nwaj Otomatik",
+                                            text = if (appLanguage == "fr") "Synchronisation Cloud Automatique" else "Senkronizasyon Nwaj Otomatik",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Anons yo ap voye dirèkteman sou tout aparèy k ap itilize aplikasyon an san w pa bezwen rantre kle.",
+                                            text = if (appLanguage == "fr") {
+                                                "Les annonces sont envoyées directement sur tous les appareils sans configuration complexe."
+                                            } else {
+                                                "Anons yo ap voye dirèkteman sou tout aparèy k ap itilize aplikasyon an san w pa bezwen rantre kle."
+                                            },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -678,10 +700,12 @@ fun AdminDashboardScreen(
                             NeumorphicButton(
                                 onClick = {
                                     if (announcementTitle.isBlank() || announcementMessage.isBlank()) {
-                                        Toast.makeText(context, "Tanpri ranpli tòt ak mesaj la anvan w voye l!", Toast.LENGTH_SHORT).show()
+                                        val fillMsg = if (appLanguage == "fr") "Veuillez remplir le titre et le message avant d'envoyer !" else "Tanpri ranpli tòt ak mesaj la anvan w voye l!"
+                                        Toast.makeText(context, fillMsg, Toast.LENGTH_SHORT).show()
                                     } else {
                                         viewModel.sendDeveloperAnnouncement(announcementTitle, announcementMessage)
-                                        Toast.makeText(context, "Anons lan voye ak siksè sou tout telefòn!", Toast.LENGTH_LONG).show()
+                                        val sentMsg = if (appLanguage == "fr") "Annonce envoyée avec succès sur tous les téléphones !" else "Anons lan voye ak siksè sou tout telefòn!"
+                                        Toast.makeText(context, sentMsg, Toast.LENGTH_LONG).show()
                                         announcementTitle = ""
                                         announcementMessage = ""
                                     }
@@ -705,7 +729,7 @@ fun AdminDashboardScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "VOYE ANONS SOU TOUT TELEFÒN",
+                                        text = if (appLanguage == "fr") "ENVOYER L'ANNONCE À TOUS" else "VOYE ANONS SOU TOUT TELEFÒN",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -719,7 +743,7 @@ fun AdminDashboardScreen(
                 // Testing & Security Tools
                 item {
                     Text(
-                        text = "OUTIL TÈS AK SEKURITE",
+                        text = if (appLanguage == "fr") "OUTILS DE TEST ET SÉCURITÉ" else "OUTIL TÈS AK SEKURITE",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -753,7 +777,7 @@ fun AdminDashboardScreen(
                                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "TESTE REWARDED AD (15s)",
+                                        text = if (appLanguage == "fr") "TESTER REWARDED AD (15s)" else "TESTE REWARDED AD (15s)",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -764,7 +788,7 @@ fun AdminDashboardScreen(
                             OutlinedTextField(
                                 value = newPinText,
                                 onValueChange = { newPinText = it },
-                                label = { Text("Chanje Kòd PIN Admin") },
+                                label = { Text(if (appLanguage == "fr") "Modifier le Code PIN Admin" else "Chanje Kòd PIN Admin") },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth()
@@ -774,9 +798,11 @@ fun AdminDashboardScreen(
                                 onClick = {
                                     if (newPinText.length >= 4) {
                                         adManager.setAdminPin(newPinText)
-                                        Toast.makeText(context, "Kòd PIN chanje avèk siksè!", Toast.LENGTH_SHORT).show()
+                                        val successMsg = if (appLanguage == "fr") "Code PIN modifié avec succès !" else "Kòd PIN chanje avèk siksè!"
+                                        Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        Toast.makeText(context, "PIN dwe gen omwen 4 chif!", Toast.LENGTH_SHORT).show()
+                                        val minMsg = if (appLanguage == "fr") "Le PIN doit contenir au moins 4 chiffres !" else "PIN dwe gen omwen 4 chif!"
+                                        Toast.makeText(context, minMsg, Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 cornerRadius = 12.dp,
@@ -785,7 +811,7 @@ fun AdminDashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "CHANJE KÒD PIN",
+                                    text = if (appLanguage == "fr") "MODIFIER LE CODE PIN" else "CHANJE KÒD PIN",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 10.dp)
@@ -796,7 +822,8 @@ fun AdminDashboardScreen(
                             NeumorphicButton(
                                 onClick = {
                                     adManager.resetStats()
-                                    Toast.makeText(context, "Statistik yo re-inisyalize!", Toast.LENGTH_SHORT).show()
+                                    val resetMsg = if (appLanguage == "fr") "Statistiques réinitialisées !" else "Statistik yo re-inisyalize!"
+                                    Toast.makeText(context, resetMsg, Toast.LENGTH_SHORT).show()
                                 },
                                 cornerRadius = 12.dp,
                                 elevation = 4.dp,
@@ -805,7 +832,7 @@ fun AdminDashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "RE-INISYALIZE STATISTIK YO",
+                                    text = if (appLanguage == "fr") "RÉINITIALISER LES STATISTIQUES" else "RE-INISYALIZE STATISTIK YO",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,

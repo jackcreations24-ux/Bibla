@@ -75,13 +75,18 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
             currentEnabled = reminderEnabled,
             currentHour = reminderHour,
             currentMinute = reminderMinute,
+            language = appLanguage,
             onSave = { enabled, hour, minute ->
                 viewModel.setReadingPlanReminder(enabled, hour, minute)
                 showReminderDialog = false
                 val h = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
                 val amPm = if (hour >= 12) "PM" else "AM"
                 val timeFormatted = String.format("%02d:%02d %s", h, minute, amPm)
-                val msg = if (enabled) "Rapèl lekti aktif pou chak jou a $timeFormatted!" else "Rapèl lekti dezaktive."
+                val msg = if (appLanguage == "fr") {
+                    if (enabled) "Rappel de lecture activé pour chaque jour à $timeFormatted !" else "Rappels désactivés."
+                } else {
+                    if (enabled) "Rapèl lekti aktif pou chak jou a $timeFormatted!" else "Rapèl lekti dezaktive."
+                }
                 android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showReminderDialog = false }
@@ -92,6 +97,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
         PremiumUpgradeDialog(
             adManager = adManager,
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showPremiumDialog = false },
             onUpgraded = { showPremiumDialog = false }
         )
@@ -101,6 +107,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
         RewardedAdDialog(
             adManager = adManager,
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showRewardedDialog = false },
             onRewardEarned = { showRewardedDialog = false }
         )
@@ -110,6 +117,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
         PrivacyPolicyDialog(
             isDarkTheme = isDarkTheme,
             onlineUrl = privacyPolicyUrl,
+            language = appLanguage,
             onDismiss = { showPrivacyDialog = false }
         )
     }
@@ -117,6 +125,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
     if (showTermsDialog) {
         TermsOfUseDialog(
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showTermsDialog = false }
         )
     }
@@ -124,6 +133,7 @@ fun ProfileScreen(navController: NavController, viewModel: BibleViewModel) {
     if (showLegalDialog) {
         LegalInfoDialog(
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showLegalDialog = false }
         )
     }

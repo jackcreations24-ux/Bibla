@@ -30,6 +30,7 @@ import com.google.android.gms.ads.LoadAdError
 fun BottomBannerAdView(
     adManager: AdManager,
     isDarkTheme: Boolean,
+    language: String = "ht",
     onOpenPremiumDialog: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -70,7 +71,11 @@ fun BottomBannerAdView(
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = if (isTestMode) "RÈKLAM (ADMOB TEST)" else "RÈKLAM",
+                        text = if (language == "fr") {
+                            if (isTestMode) "PUBLICITÉ (TEST ADMOB)" else "PUBLICITÉ"
+                        } else {
+                            if (isTestMode) "RÈKLAM (ADMOB TEST)" else "RÈKLAM"
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -91,7 +96,7 @@ fun BottomBannerAdView(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Retire anons ($2.99)",
+                        text = if (language == "fr") "Supprimer les pubs ($2.99)" else "Retire anons ($2.99)",
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -153,13 +158,13 @@ fun BottomBannerAdView(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Bib La • Edisyon Enpakt",
+                                text = if (language == "fr") "La Sainte Bible • Édition Impact" else "Bib La • Edisyon Enpakt",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Pase nan Mòd Premium pou lekti san okenn entèripsyon!",
+                                text = if (language == "fr") "Passez en Mode Premium pour une lecture sans interruption !" else "Pase nan Mòd Premium pou lekti san okenn entèripsyon!",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -171,7 +176,7 @@ fun BottomBannerAdView(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "DEBLOKE",
+                                text = if (language == "fr") "DÉBLOQUER" else "DEBLOKE",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,

@@ -97,6 +97,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
         PremiumUpgradeDialog(
             adManager = adManager,
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showPremiumDialog = false },
             onUpgraded = { showPremiumDialog = false }
         )
@@ -106,6 +107,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
         RewardedAdDialog(
             adManager = adManager,
             isDarkTheme = isDarkTheme,
+            language = appLanguage,
             onDismiss = { showRewardedDialog = false },
             onRewardEarned = { showRewardedDialog = false }
         )
@@ -345,7 +347,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                             fontSize = 11.sp
                                         )
                                         Text(
-                                            text = spiritualTheme.badgeLabel.uppercase(),
+                                            text = spiritualTheme.getBadgeLabel(appLanguage).uppercase(),
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Black,
                                             letterSpacing = 0.8.sp,
@@ -555,7 +557,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.ChatBubbleOutline,
-                                            contentDescription = "Kòmantè",
+                                            contentDescription = if (appLanguage == "fr") "Commentaires" else "Kòmantè",
                                             modifier = Modifier.size(12.dp),
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
@@ -581,7 +583,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
-                                            contentDescription = "Plis opsyon",
+                                            contentDescription = if (appLanguage == "fr") "Plus d'options" else "Plis opsyon",
                                             modifier = Modifier.size(14.dp),
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -641,7 +643,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                             onClick = {
                                                 showVerseOptions = false
                                                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                                val clip = android.content.ClipData.newPlainText("Vèsè", "\"$primaryVerseText\"\n— $localizedBookName ${verse.chapter}:${verse.verseNumber}")
+                                                val clip = android.content.ClipData.newPlainText(if (appLanguage == "fr") "Verset" else "Vèsè", "\"$primaryVerseText\"\n— $localizedBookName ${verse.chapter}:${verse.verseNumber}")
                                                 clipboard.setPrimaryClip(clip)
                                                 val toastMsg = if (appLanguage == "fr") "Verset copié !" else "Vèsè kopye nan panyen!"
                                                 android.widget.Toast.makeText(context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
@@ -686,7 +688,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
 
             // Dedicated "Tèm jodi a" Section
             item {
-                val todayTheme = rememberTodayTheme()
+                val todayTheme = rememberTodayTheme(appLanguage)
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -728,19 +730,35 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                     }
                                 }
 
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            val encodedBook = android.net.Uri.encode(todayTheme.book)
+                                            navController.navigate("reader/$encodedBook/${todayTheme.chapter}")
+                                        }
+                                ) {
                                     Text(
                                         text = todayTheme.title,
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Text(
-                                        text = todayTheme.reference,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = todayTheme.reference,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.OpenInNew,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
                                 }
                             }
 
@@ -752,6 +770,81 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 lineHeight = 22.sp
                             )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Read Passage & Share Action Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                NeumorphicButton(
+                                    onClick = {
+                                        val encodedBook = android.net.Uri.encode(todayTheme.book)
+                                        navController.navigate("reader/$encodedBook/${todayTheme.chapter}")
+                                    },
+                                    cornerRadius = 12.dp,
+                                    elevation = 3.dp,
+                                    isDarkTheme = isDarkTheme
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Book,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (appLanguage == "fr") "Lire le passage" else "Li pasaj la",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+
+                                NeumorphicButton(
+                                    onClick = {
+                                        val shareText = buildString {
+                                            append("✨ ${todayTheme.title} — ${todayTheme.reference}\n\n")
+                                            append("${todayTheme.description}\n\n")
+                                            append(if (appLanguage == "fr") "Partagé depuis l'application La Sainte Bible" else "Pataje depi aplikasyon Bib La")
+                                        }
+                                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, shareText)
+                                        }
+                                        context.startActivity(Intent.createChooser(sendIntent, if (appLanguage == "fr") "Partager le thème" else "Pataje tèm nan"))
+                                    },
+                                    cornerRadius = 12.dp,
+                                    elevation = 3.dp,
+                                    isDarkTheme = isDarkTheme
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Share,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (appLanguage == "fr") "Partager" else "Pataje",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -824,6 +917,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                 BottomBannerAdView(
                     adManager = adManager,
                     isDarkTheme = isDarkTheme,
+                    language = appLanguage,
                     onOpenPremiumDialog = { showPremiumDialog = true }
                 )
             }
@@ -881,7 +975,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                         letterSpacing = 1.sp
                                     )
                                     Text(
-                                        text = activePlan.title,
+                                        text = activePlan.getTitle(appLanguage),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -967,7 +1061,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                         Text(
-                                            text = day.passages.joinToString(", ") { it.displayReference },
+                                            text = day.passages.joinToString(", ") { it.getDisplayReference(appLanguage) },
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -1071,6 +1165,7 @@ fun HomeScreen(navController: NavController, viewModel: BibleViewModel) {
             savedUserName = savedUserName,
             viewModel = viewModel,
             isDarkTheme = isDarkTheme,
+            appLanguage = appLanguage,
             onDismiss = { showCommentSheet = false }
         )
     }
@@ -1081,64 +1176,164 @@ private data class DailyThemeInfo(
     val reference: String,
     val description: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val tags: List<String>
+    val tags: List<String>,
+    val book: String,
+    val chapter: Int
 )
 
 @Composable
-private fun rememberTodayTheme(): DailyThemeInfo {
-    return remember {
+private fun rememberTodayTheme(appLanguage: String): DailyThemeInfo {
+    return remember(appLanguage) {
         val calendar = java.util.Calendar.getInstance()
         val dayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK)
         when (dayOfWeek) {
-            java.util.Calendar.SUNDAY -> DailyThemeInfo(
-                title = "Gras ak Adorasyon",
-                reference = "Sòm 100:1-5",
-                description = "Jodi a se yon jou benediksyon pou rann Bondye aksyon de gras ak lajwa nan kè nou.",
-                icon = Icons.Default.Favorite,
-                tags = listOf("Gras", "Lajwa", "Adorasyon")
-            )
-            java.util.Calendar.MONDAY -> DailyThemeInfo(
-                title = "Lafwa ak Konfyans",
-                reference = "Ebre 11:1",
-                description = "Mete tout konfyans ou nan Bondye pou semèn sa a. Lafwa se asirans bagay nou espere yo.",
-                icon = Icons.Default.Lightbulb,
-                tags = listOf("Lafwa", "Konfyans", "Espwa")
-            )
-            java.util.Calendar.TUESDAY -> DailyThemeInfo(
-                title = "Lapè Bondye",
-                reference = "Jan 14:27",
-                description = "Kris la ban nou yon lapè ki depase tout konpreyansyon. Pa kite kè w boulvèse.",
-                icon = Icons.Default.Star,
-                tags = listOf("Lapè", "Kouray", "Poze")
-            )
-            java.util.Calendar.WEDNESDAY -> DailyThemeInfo(
-                title = "Lanmou ak Sèvis",
-                reference = "1 Korentyen 13:13",
-                description = "Pi gwo kòmandman an se lanmou. Se pou nou renmen youn lòt menm jan Kris la renmen nou.",
-                icon = Icons.Default.Favorite,
-                tags = listOf("Lanmou", "Fratènite", "Sèvis")
-            )
-            java.util.Calendar.THURSDAY -> DailyThemeInfo(
-                title = "Pardon ak Rekonsilyasyon",
-                reference = "Efèzyen 4:32",
-                description = "Padone moun ki fè w mal menm jan Bondye padone w nan Kris la, pou kè w ka lib ak trankil.",
-                icon = Icons.Default.CheckCircle,
-                tags = listOf("Pardon", "Kè bon", "Rekonsilyasyon")
-            )
-            java.util.Calendar.FRIDAY -> DailyThemeInfo(
-                title = "Lajwa ak Rekonesans",
-                reference = "1 Tesalonisyen 5:16-18",
-                description = "Toujou gen kè kontan, lapriyè san rete, epi di Bondye mèsi nan tout sikonstans lavi a.",
-                icon = Icons.Default.ThumbUp,
-                tags = listOf("Lajwa", "Mèsi", "Lapriyè")
-            )
-            else -> DailyThemeInfo(
-                title = "Kouray ak Fòs",
-                reference = "Ezayi 40:31",
-                description = "Moun ki mete konfyans yo nan Seyè a ap jwenn nouvo fòs. Yo p'ap janm fatige.",
-                icon = Icons.Default.Bookmark,
-                tags = listOf("Fòs", "Kouray", "Viktwa")
-            )
+            java.util.Calendar.SUNDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Grâce & Adoration",
+                    reference = "Psaume 100:1-5",
+                    description = "Aujourd'hui est un jour de bénédiction pour rendre à Dieu des actions de grâce et de la joie dans nos cœurs.",
+                    icon = Icons.Default.Favorite,
+                    tags = listOf("Grâce", "Joie", "Adoration"),
+                    book = "Sòm",
+                    chapter = 100
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Gras ak Adorasyon",
+                    reference = "Sòm 100:1-5",
+                    description = "Jodi a se yon jou benediksyon pou rann Bondye aksyon de gras ak lajwa nan kè nou.",
+                    icon = Icons.Default.Favorite,
+                    tags = listOf("Gras", "Lajwa", "Adorasyon"),
+                    book = "Sòm",
+                    chapter = 100
+                )
+            }
+            java.util.Calendar.MONDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Foi & Confiance",
+                    reference = "Hébreux 11:1",
+                    description = "Placez toute votre confiance en Dieu pour cette semaine. La foi est l'assurance des choses qu'on espère.",
+                    icon = Icons.Default.Lightbulb,
+                    tags = listOf("Foi", "Confiance", "Espoir"),
+                    book = "Ebre",
+                    chapter = 11
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Lafwa ak Konfyans",
+                    reference = "Ebre 11:1",
+                    description = "Mete tout konfyans ou nan Bondye pou semèn sa a. Lafwa se asirans bagay nou espere yo.",
+                    icon = Icons.Default.Lightbulb,
+                    tags = listOf("Lafwa", "Konfyans", "Espwa"),
+                    book = "Ebre",
+                    chapter = 11
+                )
+            }
+            java.util.Calendar.TUESDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Paix de Dieu",
+                    reference = "Jean 14:27",
+                    description = "Le Christ nous donne une paix qui surpasse toute intelligence. Que votre cœur ne se trouble point.",
+                    icon = Icons.Default.Star,
+                    tags = listOf("Paix", "Courage", "Sérénité"),
+                    book = "Jan",
+                    chapter = 14
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Lapè Bondye",
+                    reference = "Jan 14:27",
+                    description = "Kris la ban nou yon lapè ki depase tout konpreyansyon. Pa kite kè w boulvèse.",
+                    icon = Icons.Default.Star,
+                    tags = listOf("Lapè", "Kouray", "Poze"),
+                    book = "Jan",
+                    chapter = 14
+                )
+            }
+            java.util.Calendar.WEDNESDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Amour & Service",
+                    reference = "1 Corinthiens 13:13",
+                    description = "Le plus grand commandement est l'amour. Aimons-nous les uns les autres comme le Christ nous a aimés.",
+                    icon = Icons.Default.Favorite,
+                    tags = listOf("Amour", "Fraternité", "Service"),
+                    book = "1 Korentyen",
+                    chapter = 13
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Lanmou ak Sèvis",
+                    reference = "1 Korentyen 13:13",
+                    description = "Pi gwo kòmandman an se lanmou. Se pou nou renmen youn lòt menm jan Kris la renmen nou.",
+                    icon = Icons.Default.Favorite,
+                    tags = listOf("Lanmou", "Fratènite", "Sèvis"),
+                    book = "1 Korentyen",
+                    chapter = 13
+                )
+            }
+            java.util.Calendar.THURSDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Pardon & Réconciliation",
+                    reference = "Éphésiens 4:32",
+                    description = "Pardonnez à ceux qui vous offensent tout comme Dieu vous a pardonné en Christ, afin que votre cœur soit libre et tranquille.",
+                    icon = Icons.Default.CheckCircle,
+                    tags = listOf("Pardon", "Bonté", "Réconciliation"),
+                    book = "Efèzyen",
+                    chapter = 4
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Pardon ak Rekonsilyasyon",
+                    reference = "Efèzyen 4:32",
+                    description = "Padone moun ki fè w mal menm jan Bondye padone w nan Kris la, pou kè w ka lib ak trankil.",
+                    icon = Icons.Default.CheckCircle,
+                    tags = listOf("Pardon", "Kè bon", "Rekonsilyasyon"),
+                    book = "Efèzyen",
+                    chapter = 4
+                )
+            }
+            java.util.Calendar.FRIDAY -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Joie & Reconnaissance",
+                    reference = "1 Thessaloniciens 5:16-18",
+                    description = "Soyez toujours joyeux, priez sans cesse, et rendez grâces à Dieu en toutes circonstances de la vie.",
+                    icon = Icons.Default.ThumbUp,
+                    tags = listOf("Joie", "Merci", "Prière"),
+                    book = "1 Tesalonisyen",
+                    chapter = 5
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Lajwa ak Rekonesans",
+                    reference = "1 Tesalonisyen 5:16-18",
+                    description = "Toujou gen kè kontan, lapriyè san rete, epi di Bondye mèsi nan tout sikonstans lavi a.",
+                    icon = Icons.Default.ThumbUp,
+                    tags = listOf("Lajwa", "Mèsi", "Lapriyè"),
+                    book = "1 Tesalonisyen",
+                    chapter = 5
+                )
+            }
+            else -> if (appLanguage == "fr") {
+                DailyThemeInfo(
+                    title = "Courage & Force",
+                    reference = "Ésaïe 40:31",
+                    description = "Ceux qui se confient en l'Éternel renouvellent leur force. Ils ne se fatigueront point.",
+                    icon = Icons.Default.Bookmark,
+                    tags = listOf("Force", "Courage", "Victoire"),
+                    book = "Ezayi",
+                    chapter = 40
+                )
+            } else {
+                DailyThemeInfo(
+                    title = "Kouray ak Fòs",
+                    reference = "Ezayi 40:31",
+                    description = "Moun ki mete konfyans yo nan Seyè a ap jwenn nouvo fòs. Yo p'ap janm fatige.",
+                    icon = Icons.Default.Bookmark,
+                    tags = listOf("Fòs", "Kouray", "Viktwa"),
+                    book = "Ezayi",
+                    chapter = 40
+                )
+            }
         }
     }
 }
@@ -1150,6 +1345,7 @@ fun GlassmorphicCommentSheet(
     savedUserName: String,
     viewModel: BibleViewModel,
     isDarkTheme: Boolean,
+    appLanguage: String,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -1232,7 +1428,7 @@ fun GlassmorphicCommentSheet(
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            text = "Kòmantè (${comments.size})",
+                            text = if (appLanguage == "fr") "Commentaires (${comments.size})" else "Kòmantè (${comments.size})",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -1261,14 +1457,15 @@ fun GlassmorphicCommentSheet(
                                     isRefreshing = true
                                     viewModel.refreshComments {
                                         isRefreshing = false
-                                        android.widget.Toast.makeText(context, "Dènye kòmantè yo chaje!", android.widget.Toast.LENGTH_SHORT).show()
+                                        val toastMsg = if (appLanguage == "fr") "Derniers commentaires chargés !" else "Dènye kòmantè yo chaje!"
+                                        android.widget.Toast.makeText(context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Rafrechi kòmantè",
+                                contentDescription = if (appLanguage == "fr") "Rafraîchir" else "Rafrechi kòmantè",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .size(22.dp)
@@ -1281,7 +1478,7 @@ fun GlassmorphicCommentSheet(
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Fèmen",
+                                contentDescription = if (appLanguage == "fr") "Fermer" else "Fèmen",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -1309,7 +1506,7 @@ fun GlassmorphicCommentSheet(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Pa gen kòmantè ankò. Se ou menm ki pou premye ekri!",
+                                text = if (appLanguage == "fr") "Aucun commentaire pour le moment. Soyez le premier à écrire !" else "Pa gen kòmantè ankò. Se ou menm ki pou premye ekri!",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1327,11 +1524,13 @@ fun GlassmorphicCommentSheet(
                                 comment = comment,
                                 deviceId = deviceId,
                                 isDarkTheme = isDarkTheme,
+                                appLanguage = appLanguage,
                                 onLike = { viewModel.toggleCommentLike(comment.id) },
                                 onReply = { replyingTo = comment },
                                 onReport = {
                                     viewModel.reportComment(comment.id)
-                                    android.widget.Toast.makeText(context, "Kòmantè sa sinyale!", android.widget.Toast.LENGTH_SHORT).show()
+                                    val toastMsg = if (appLanguage == "fr") "Ce commentaire a été signalé !" else "Kòmantè sa sinyale!"
+                                    android.widget.Toast.makeText(context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             )
 
@@ -1349,11 +1548,13 @@ fun GlassmorphicCommentSheet(
                                         comment = reply,
                                         deviceId = deviceId,
                                         isDarkTheme = isDarkTheme,
+                                        appLanguage = appLanguage,
                                         onLike = { viewModel.toggleCommentLike(reply.id) },
                                         onReply = { replyingTo = comment },
                                         onReport = {
                                             viewModel.reportComment(reply.id)
-                                            android.widget.Toast.makeText(context, "Kòmantè sa sinyale!", android.widget.Toast.LENGTH_SHORT).show()
+                                            val toastMsg = if (appLanguage == "fr") "Ce commentaire a été signalé !" else "Kòmantè sa sinyale!"
+                                            android.widget.Toast.makeText(context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
                                         }
                                     )
                                 }
@@ -1376,7 +1577,7 @@ fun GlassmorphicCommentSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Reponn @${reply.userName}",
+                            text = if (appLanguage == "fr") "Répondre à @${reply.userName}" else "Reponn @${reply.userName}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -1387,7 +1588,7 @@ fun GlassmorphicCommentSheet(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Kansle",
+                                contentDescription = if (appLanguage == "fr") "Annuler" else "Kansle",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp)
                             )
@@ -1414,7 +1615,7 @@ fun GlassmorphicCommentSheet(
                                 nameText = it
                                 viewModel.saveUserName(it)
                             },
-                            placeholder = { Text("Non ou (egzanp: Frè Pòl)", style = MaterialTheme.typography.bodySmall) },
+                            placeholder = { Text(if (appLanguage == "fr") "Votre nom (ex: Frère Paul)" else "Non ou (egzanp: Frè Pòl)", style = MaterialTheme.typography.bodySmall) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -1446,7 +1647,7 @@ fun GlassmorphicCommentSheet(
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
-                                    text = "Kòmantè kòm: ",
+                                    text = if (appLanguage == "fr") "Commenter en tant que : " else "Kòmantè kòm: ",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1458,7 +1659,7 @@ fun GlassmorphicCommentSheet(
                                 )
                             }
                             Text(
-                                text = "Chanje non",
+                                text = if (appLanguage == "fr") "Modifier" else "Chanje non",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.secondary,
@@ -1479,7 +1680,7 @@ fun GlassmorphicCommentSheet(
                                     commentText = it
                                 }
                             },
-                            placeholder = { Text("Ekri yon kòmantè... (max 700 lèt)", style = MaterialTheme.typography.bodySmall) },
+                            placeholder = { Text(if (appLanguage == "fr") "Écrire un commentaire... (max 700 caractères)" else "Ekri yon kòmantè... (max 700 lèt)", style = MaterialTheme.typography.bodySmall) },
                             modifier = Modifier
                                 .weight(1f)
                                 .heightIn(min = 48.dp, max = 100.dp),
@@ -1525,7 +1726,7 @@ fun GlassmorphicCommentSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Send,
-                                contentDescription = "Voye",
+                                contentDescription = if (appLanguage == "fr") "Envoyer" else "Voye",
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -1542,6 +1743,7 @@ fun CommentItemCard(
     comment: com.zoutiw.bibla.data.VerseComment,
     deviceId: String,
     isDarkTheme: Boolean,
+    appLanguage: String,
     onLike: () -> Unit,
     onReply: () -> Unit,
     onReport: () -> Unit
@@ -1550,11 +1752,20 @@ fun CommentItemCard(
     val isLiked = comment.likedByUsers.contains(deviceId)
 
     val diffSeconds = (System.currentTimeMillis() - comment.timestamp) / 1000
-    val timeAgo = when {
-        diffSeconds < 60 -> "Kounye a"
-        diffSeconds < 3600 -> "${diffSeconds / 60} mn de sa"
-        diffSeconds < 86400 -> "${diffSeconds / 3600} èdtan de sa"
-        else -> "${diffSeconds / 86400} jou de sa"
+    val timeAgo = if (appLanguage == "fr") {
+        when {
+            diffSeconds < 60 -> "À l'instant"
+            diffSeconds < 3600 -> "Il y a ${diffSeconds / 60} min"
+            diffSeconds < 86400 -> "Il y a ${diffSeconds / 3600} h"
+            else -> "Il y a ${diffSeconds / 86400} j"
+        }
+    } else {
+        when {
+            diffSeconds < 60 -> "Kounye a"
+            diffSeconds < 3600 -> "${diffSeconds / 60} mn de sa"
+            diffSeconds < 86400 -> "${diffSeconds / 3600} èdtan de sa"
+            else -> "${diffSeconds / 86400} jou de sa"
+        }
     }
 
     Box(
@@ -1614,7 +1825,7 @@ fun CommentItemCard(
                     ) {
                         Icon(
                             Icons.Default.MoreVert,
-                            contentDescription = "Opsyon",
+                            contentDescription = if (appLanguage == "fr") "Options" else "Opsyon",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
@@ -1636,7 +1847,10 @@ fun CommentItemCard(
                                         tint = Color.Red,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Text("Sinyale kòmantè sa a", color = Color.Red)
+                                    Text(
+                                        text = if (appLanguage == "fr") "Signaler ce commentaire" else "Sinyale kòmantè sa a",
+                                        color = Color.Red
+                                    )
                                 }
                             },
                             onClick = {
@@ -1682,7 +1896,7 @@ fun CommentItemCard(
                 }
 
                 Text(
-                    text = "Reponn",
+                    text = if (appLanguage == "fr") "Répondre" else "Reponn",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
