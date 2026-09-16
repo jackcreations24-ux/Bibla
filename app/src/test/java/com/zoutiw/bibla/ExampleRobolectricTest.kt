@@ -42,6 +42,22 @@ class ExampleRobolectricTest {
     // Test search in French New Testament
     val searchResults = repo.searchNewTestament("monde")
     org.junit.Assert.assertTrue("Search for 'monde' in NT should return results", searchResults.isNotEmpty())
+
+    // Test Old Testament verses
+    // Genesis 1:1
+    val gen1 = repo.getFrenchVersesForChapter("Jenèz", 1)
+    org.junit.Assert.assertTrue("Jenèz 1 should have verses", gen1.isNotEmpty())
+    org.junit.Assert.assertTrue("Jenèz 1:1 should contain commencement", gen1[1]?.contains("commencement") == true)
+
+    // Psalm 23:1
+    val psa23 = repo.getFrenchVersesForChapter("Sòm", 23)
+    org.junit.Assert.assertTrue("Sòm 23 should have verses", psa23.isNotEmpty())
+    org.junit.Assert.assertTrue("Sòm 23:1 should contain berger", psa23[1]?.contains("berger") == true)
+
+    // Isaiah 53:5
+    val isa53 = repo.getFrenchVersesForChapter("Ezayi", 53)
+    org.junit.Assert.assertTrue("Ezayi 53 should have verses", isa53.isNotEmpty())
+    org.junit.Assert.assertTrue("Ezayi 53:5 should contain blessé", isa53[5]?.contains("blessé") == true)
   }
 }
 

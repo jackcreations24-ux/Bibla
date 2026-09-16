@@ -211,14 +211,19 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
                 emptyList()
             }
 
-            // Search French New Testament offline bundle
-            val frenchNtMatches = try {
-                frenchRepository.searchNewTestament(query, 30)
+            // Search French Bible offline bundle (all 66 books)
+            val frenchMatches = try {
+                val tFilter = when (testamentFilter) {
+                    SearchTestamentFilter.ALL -> "ALL"
+                    SearchTestamentFilter.OLD_TESTAMENT -> "OT"
+                    SearchTestamentFilter.NEW_TESTAMENT -> "NT"
+                }
+                frenchRepository.searchFrenchBible(query, tFilter, 40)
             } catch (e: Exception) {
                 emptyList()
             }
             val frenchVerses = mutableListOf<Verse>()
-            for (match in frenchNtMatches) {
+            for (match in frenchMatches) {
                 try {
                     val exact = repository.getExactVerse(match.first, match.second, match.third)
                     if (exact != null) {

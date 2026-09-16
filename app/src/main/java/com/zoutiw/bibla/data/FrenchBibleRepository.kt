@@ -106,7 +106,11 @@ class FrenchBibleRepository(private val context: Context) {
         return prebundledChapters[key]?.get(verseNumber)
     }
 
-    fun searchNewTestament(query: String, limit: Int = 40): List<Triple<String, Int, Int>> {
+    fun searchFrenchBible(
+        query: String,
+        testament: String = "ALL",
+        limit: Int = 40
+    ): List<Triple<String, Int, Int>> {
         val cleanQuery = query.trim()
         if (cleanQuery.length < 2) return emptyList()
 
@@ -116,8 +120,20 @@ class FrenchBibleRepository(private val context: Context) {
             "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS",
             "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"
         )
+        val otUsfms = listOf(
+            "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA",
+            "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO",
+            "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO",
+            "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL"
+        )
 
-        for (usfm in ntUsfms) {
+        val targetUsfms = when (testament) {
+            "OT" -> otUsfms
+            "NT" -> ntUsfms
+            else -> ntUsfms + otUsfms
+        }
+
+        for (usfm in targetUsfms) {
             val bookMap = loadBookFromAssets(usfm) ?: continue
             val creoleBook = BibleBookNames.usfmToCreole[usfm] ?: continue
             for ((chNum, verses) in bookMap) {
@@ -130,6 +146,10 @@ class FrenchBibleRepository(private val context: Context) {
             }
         }
         return results
+    }
+
+    fun searchNewTestament(query: String, limit: Int = 40): List<Triple<String, Int, Int>> {
+        return searchFrenchBible(query, "NT", limit)
     }
 
     suspend fun getFrenchVersesForChapter(bookName: String, chapter: Int): Map<Int, String> = withContext(Dispatchers.IO) {
